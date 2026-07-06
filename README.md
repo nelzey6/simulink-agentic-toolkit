@@ -62,7 +62,14 @@ addpath("<path-to-this-fork>")
 setupCacheAwareSATK("install")
 ```
 
-This points the Pi MCP configuration at this fork's `tools/tools.json`, initializes SATK, and verifies that `model_context` is available. Existing MCP config is backed up before being overwritten.
+By default this configures all supported local agent MCP config locations on a best-effort basis (`Agent="all"`): Pi, Claude Code, Gemini CLI, Amp, and VS Code/Copilot. It points each MCP configuration at this fork's `tools/tools.json`, initializes SATK, and verifies that `model_context` is available. Existing MCP config files are backed up before being modified.
+
+To configure only one agent, pass for example:
+
+```matlab
+setupCacheAwareSATK("install", "Agent", "claude")
+setupCacheAwareSATK("install", "Agent", "pi")
+```
 
 ## Get Started with the Simulink Agentic Toolkit
 

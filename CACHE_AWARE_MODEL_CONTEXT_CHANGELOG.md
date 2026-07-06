@@ -12,8 +12,9 @@ Added `setupCacheAwareSATK.m` as a fork-local installer/bootstrap wrapper. It:
 
 - adds the fork and cache tools to the MATLAB path,
 - runs `satk_initialize` when available,
-- writes a Pi MCP config pointing to this fork's `tools/tools.json`,
-- backs up an existing MCP config before overwriting,
+- writes MCP config for supported agents pointing to this fork's `tools/tools.json`,
+- defaults to `Agent="all"` for Pi, Claude Code, Gemini CLI, Amp, and VS Code/Copilot config locations,
+- backs up existing MCP configs before modifying,
 - verifies that `model_context` and `model_cache_invalidate` are visible.
 
 Example:

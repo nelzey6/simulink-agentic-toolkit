@@ -1,14 +1,18 @@
 function result = setupCacheAwareSATK(action, varargin)
 %SETUPCACHEAWARESATK Bootstrap the cache-aware SATK fork for local MCP use.
 %   setupCacheAwareSATK("install") adds this fork to the MATLAB path, runs
-%   satk_initialize, and optionally writes a Pi MCP config that points to this
-%   fork's tools/tools.json.
+%   satk_initialize, and writes MCP config for supported agents. By default,
+%   Agent="all" configures Pi, Claude Code, Gemini CLI, Amp, and VS Code/Copilot
+%   config locations on a best-effort basis.
 %
 %   Name-value options:
-%     ConfigurePiMCP (logical) default true
-%     MCPConfigPath   (string)  default ~/.config/mcp/mcp.json
-%     MCPServerPath   (string)  optional existing matlab-mcp-server executable
-%     MatlabRoot      (string)  optional MATLAB root for MCP server args
+%     Agent          (string)  default "all". all, pi, claude, gemini, amp, vscode, none
+%     MCPConfigPath  (string)  optional override for a single custom MCP config
+%     MCPServerPath  (string)  optional existing matlab-mcp-server executable
+%     MatlabRoot     (string)  optional MATLAB root for MCP server args
+%
+%   Backward-compatible option:
+%     ConfigurePiMCP (logical) false is equivalent to Agent="none"
 %
 %   Example:
 %     addpath("D:/Repos/GitHub/simulink-agentic-toolkit")
@@ -35,13 +39,11 @@ switch lower(action)
             warning('setupCacheAwareSATK:satkInitializeMissing', ...
                 'satk_initialize was not found on the MATLAB path.');
         end
-        if opts.ConfigurePiMCP
-            writePiMcpConfig(opts.MCPConfigPath, opts.MCPServerPath, opts.MatlabRoot, toolsFile);
-        end
-        result = verifyInstall(repoRoot, toolsFile, opts);
+        configured = configureAgents(opts, toolsFile);
+        result = verifyInstall(repoRoot, toolsFile, opts, configured);
         printResult(result);
     case "verify"
-        result = verifyInstall(repoRoot, toolsFile, opts);
+        result = verifyInstall(repoRoot, toolsFile, opts, {});
         printResult(result);
     otherwise
         error('setupCacheAwareSATK:UnknownAction', 'Unknown action: %s', action);
@@ -50,8 +52,8 @@ end
 
 function opts = parseOptions(varargin)
 opts = struct();
-opts.ConfigurePiMCP = true;
-opts.MCPConfigPath = fullfile(char(java.lang.System.getProperty('user.home')), '.config', 'mcp', 'mcp.json');
+opts.Agent = 'all';
+opts.MCPConfigPath = '';
 opts.MCPServerPath = '';
 opts.MatlabRoot = matlabroot;
 if mod(numel(varargin),2) ~= 0
@@ -61,8 +63,10 @@ for i = 1:2:numel(varargin)
     name = char(string(varargin{i}));
     value = varargin{i+1};
     switch lower(name)
+        case 'agent'
+            opts.Agent = lower(char(string(value)));
         case 'configurepimcp'
-            opts.ConfigurePiMCP = logical(value);
+            if ~logical(value), opts.Agent = 'none'; end
         case 'mcpconfigpath'
             opts.MCPConfigPath = char(string(value));
         case 'mcpserverpath'
@@ -75,11 +79,55 @@ for i = 1:2:numel(varargin)
 end
 end
 
-function writePiMcpConfig(configPath, serverPath, matlabRootValue, toolsFile)
+function configured = configureAgents(opts, toolsFile)
+configured = {};
+if strcmp(opts.Agent, 'none')
+    return;
+end
+server = matlabServerConfig(opts.MCPServerPath, opts.MatlabRoot, toolsFile);
+if ~isempty(opts.MCPConfigPath)
+    writeMcpConfig(opts.MCPConfigPath, server, 'mcpServers');
+    configured{end+1} = opts.MCPConfigPath;
+    return;
+end
+for entry = agentConfigPaths(opts.Agent)
+    configPath = entry{1}.path;
+    rootField = entry{1}.rootField;
+    try
+        writeMcpConfig(configPath, server, rootField);
+        configured{end+1} = configPath;
+    catch ME
+        warning('setupCacheAwareSATK:ConfigWriteFailed', ...
+            'Failed to write MCP config %s: %s', configPath, ME.message);
+    end
+end
+end
+
+function entries = agentConfigPaths(agent)
+home = char(java.lang.System.getProperty('user.home'));
+appdata = getenv('APPDATA');
+if isempty(appdata), appdata = fullfile(home, 'AppData', 'Roaming'); end
+all = {
+    struct('agent','pi',     'path',fullfile(home,'.config','mcp','mcp.json'),              'rootField','mcpServers')
+    struct('agent','claude', 'path',fullfile(home,'.claude.json'),                          'rootField','mcpServers')
+    struct('agent','gemini', 'path',fullfile(home,'.gemini','settings.json'),               'rootField','mcpServers')
+    struct('agent','amp',    'path',fullfile(home,'.config','amp','settings.json'),         'rootField','amp.mcpServers')
+    struct('agent','vscode', 'path',fullfile(appdata,'Code','User','mcp.json'),             'rootField','mcpServers')
+};
+if strcmp(agent,'all')
+    entries = all;
+else
+    entries = all(strcmp(cellfun(@(x) x.agent, all, 'UniformOutput', false), agent));
+    if isempty(entries)
+        error('setupCacheAwareSATK:UnknownAgent', 'Unknown Agent option: %s', agent);
+    end
+end
+end
+
+function server = matlabServerConfig(serverPath, matlabRootValue, toolsFile)
 if isempty(serverPath)
     candidates = {
         fullfile(char(java.lang.System.getProperty('user.home')), '.matlab', 'agentic-toolkits', 'bin', 'matlab-mcp-server.exe')
-        fullfile(fileparts(fileparts(fileparts(toolsFile))), 'bin', 'matlab-mcp-server.exe')
         'matlab-mcp-server'
     };
     serverPath = candidates{1};
@@ -90,14 +138,31 @@ if isempty(serverPath)
         end
     end
 end
+server = struct();
+server.command = serverPath;
+server.args = {['--matlab-root=' matlabRootValue], ['--extension-file=' toolsFile], '--disable-telemetry=true'};
+server.lifecycle = 'lazy';
+server.idleTimeout = 10;
+end
+
+function writeMcpConfig(configPath, server, rootField)
 cfg = struct();
-cfg.mcpServers = struct();
-matlabServer = struct();
-matlabServer.command = serverPath;
-matlabServer.args = {['--matlab-root=' matlabRootValue], ['--extension-file=' toolsFile], '--disable-telemetry=true'};
-matlabServer.lifecycle = 'lazy';
-matlabServer.idleTimeout = 10;
-cfg.mcpServers.matlab = matlabServer;
+if isfile(configPath)
+    try
+        cfg = jsondecode(fileread(configPath));
+    catch
+        cfg = struct();
+    end
+end
+switch rootField
+    case 'mcpServers'
+        if ~isfield(cfg,'mcpServers') || ~isstruct(cfg.mcpServers), cfg.mcpServers = struct(); end
+        cfg.mcpServers.matlab = server;
+    case 'amp.mcpServers'
+        if ~isfield(cfg,'amp') || ~isstruct(cfg.amp), cfg.amp = struct(); end
+        if ~isfield(cfg.amp,'mcpServers') || ~isstruct(cfg.amp.mcpServers), cfg.amp.mcpServers = struct(); end
+        cfg.amp.mcpServers.matlab = server;
+end
 folder = fileparts(configPath);
 if ~exist(folder, 'dir'), mkdir(folder); end
 if isfile(configPath)
@@ -109,7 +174,7 @@ cleanup = onCleanup(@() fclose(fid));
 fwrite(fid, jsonencode(cfg, PrettyPrint=true));
 end
 
-function result = verifyInstall(repoRoot, toolsFile, opts)
+function result = verifyInstall(repoRoot, toolsFile, opts, configured)
 result = struct();
 result.repoRoot = repoRoot;
 result.toolsFile = toolsFile;
@@ -117,8 +182,8 @@ result.toolsFileExists = isfile(toolsFile);
 result.modelContext = which('model_context');
 result.cacheInvalidate = which('model_cache_invalidate');
 result.satkInitialize = which('satk_initialize');
-result.mcpConfigPath = opts.MCPConfigPath;
-result.mcpConfigExists = isfile(opts.MCPConfigPath);
+result.agent = opts.Agent;
+result.configuredConfigs = configured;
 result.ok = result.toolsFileExists && ~isempty(result.modelContext) && ~isempty(result.cacheInvalidate);
 end
 
@@ -130,6 +195,9 @@ fprintf('Tools file:     %s\n', result.toolsFile);
 fprintf('model_context:  %s\n', result.modelContext);
 fprintf('invalidate:     %s\n', result.cacheInvalidate);
 fprintf('satk_init:      %s\n', result.satkInitialize);
-fprintf('MCP config:     %s\n', result.mcpConfigPath);
+fprintf('Agent:          %s\n', result.agent);
+for i = 1:numel(result.configuredConfigs)
+    fprintf('MCP config:     %s\n', result.configuredConfigs{i});
+end
 fprintf('Result:         %s\n\n', string(result.ok));
 end
