@@ -19,7 +19,8 @@ Simulink domain skills are in `skills-catalog/model-based-design-core/`. Each sk
 
 ## MCP Tools
 
-Seven MCP tools are available when the MCP server is connected (see `tools/registry.json`):
+MCP tools are available when the MCP server is connected (see `tools/registry.json`):
+- `model_context` — first-choice cache-aware working context for engineering tasks; use before broad reads/overviews
 - `model_overview` — hierarchical model visualization
 - `model_read` — block topology and expression notation
 - `model_edit` — structural modifications
@@ -27,6 +28,7 @@ Seven MCP tools are available when the MCP server is connected (see `tools/regis
 - `model_query_params` — random access to parameters
 - `model_resolve_params` — resolve workspace variables
 - `model_test` — Gherkin-based behavioral testing (requires Simulink Test)
+- `model_cache_status`, `model_cache_get`, `model_cache_update`, `model_cache_invalidate`, `model_analyze_cached` — experimental cache inspection/update/invalidation tools
 
 ## MATLAB Prerequisite
 

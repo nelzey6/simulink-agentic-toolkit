@@ -4,7 +4,7 @@
     {
       "name": "model_overview",
       "title": "Model Overview",
-      "description": "Get a high-level view of the model showing subsystem hierarchy, interfaces, and connections. Use this when first encountering a model to understand the big picture before diving into details.",
+      "description": "Get a high-level view of the model. Prefer model_context first for task-oriented/cache-aware context; use model_overview when you explicitly need a hierarchy/tree/interface overview.\n\nGet a high-level view of the model showing subsystem hierarchy, interfaces, and connections. Use this when first encountering a model to understand the big picture before diving into details.",
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
@@ -24,7 +24,7 @@
           },
           "detail": {
             "type": "string",
-            "description": "Level of detail: 'tree' (component hierarchy only — no port or signal info), 'interfaces' (component hierarchy + input/output port names for each component), or 'full' (component hierarchy + port names + top-level component signal connections)"
+            "description": "Level of detail: 'tree' (component hierarchy only \u2014 no port or signal info), 'interfaces' (component hierarchy + input/output port names for each component), or 'full' (component hierarchy + port names + top-level component signal connections)"
           }
         },
         "required": [
@@ -37,7 +37,7 @@
     {
       "name": "model_read",
       "title": "Model Read",
-      "description": "Inspect the structure and algorithmic behavior of a Simulink model. Returns block topology, connections, and expressions showing what each block does.\n\nExpression notation: uN(source) = input port N with source block.port in parentheses; yN = output port N; @Param(value) = parameter with actual set-value from the block. Example: y1 = @Gain(Kp) * u1(blk_5.y1) means output 1 = Gain parameter times input 1 (from block 5's output 1). When value is numeric (e.g., @Gain(5000)), you have the final value. When value is a variable reference (e.g., @Gain(Kp)), use model_resolve_params to get the numeric value.\n\nModel Reference, Subsystem Reference, and Library blocks show interfaces only, not internal content.",
+      "description": "Inspect the structure and algorithmic behavior of a Simulink model. Prefer model_context first for engineering tasks or initial model understanding because it is cache-aware and compact; use model_read when you specifically need SATK algorithmic expressions, block IDs, or deeper topology for a known scope.\n\nInspect the structure and algorithmic behavior of a Simulink model. Returns block topology, connections, and expressions showing what each block does.\n\nExpression notation: uN(source) = input port N with source block.port in parentheses; yN = output port N; @Param(value) = parameter with actual set-value from the block. Example: y1 = @Gain(Kp) * u1(blk_5.y1) means output 1 = Gain parameter times input 1 (from block 5's output 1). When value is numeric (e.g., @Gain(5000)), you have the final value. When value is a variable reference (e.g., @Gain(Kp)), use model_resolve_params to get the numeric value.\n\nModel Reference, Subsystem Reference, and Library blocks show interfaces only, not internal content.",
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
@@ -136,7 +136,7 @@
     {
       "name": "model_edit",
       "title": "Model Edit",
-      "description": "Make structural changes or configure parameters in a Simulink, System Composer, or Stateflow model within ONE scope per call. Use model_read first to get block IDs.\n\nOperations (executed in array order):\n- add_block: {op, type, name?, ref?, params?, position?} - Add block or SF element. SL params e.g. {Gain: \"2.0\"}; SF types: State, Junction, Box, Data, Event, Message, StateflowFunction, EMFunction, TruthTable\n- connect: {op, target: \"blk_X.y1 -> blk_Y.u1\", params?} - Wire output to input (y=output port, u=input port); for physical ports use blk_X.portName <-> blk_Y.portName; in SF scope use portless \"#src -> #dst\" or \"? -> #dst\" (default transition); replaces existing connection if destination port occupied; params set signal properties (SL) or LabelString/ExecutionOrder (SF)\n- disconnect: {op, target: \"blk_X.y1 -> blk_Y.u1\"} - Remove connection; in SF scope target is transition sf_X, endpoint pair \"sf_X -> sf_Y\", or default \"? -> sf_X\"\n- configure: {op, target, params} - Set Simulink parameters, System Composer component properties, or SF element properties. Target types: blk_X (block params), sf_X (SF element, e.g. {LabelString: \"...\"}), blk_X.y1 -> blk_Y.u1 (signal props), config:ModelName (solver settings), or chart:ModelName (SF chart-level props, e.g. {ActionLanguage: \"MATLAB\"})\n- delete: {op, target: \"blk_X\"} - Remove block\n- replace_block: {op, target: \"blk_X\", type, ref?, params?} - Replace block with different type; preserves name, position, connections\n- create_subsystem: {op, name, ref?, interface: {inputs, outputs}} - Create subsystem; connect via #ref.yN/#ref.uN (N = port number from interface)\n\nFor parameter-only changes (no structural edits), use configure operations alone.\n\nChaining: Use \"ref\" to name a new block, \"#ref\" to reference it within the same call:\n  [{op: \"add_block\", type: \"Gain\", ref: \"g1\"}, {op: \"connect\", target: \"blk_5.y1 -> #g1.u1\"}]\n\nResponse \"created\" map shows ref → blk_id (or sf_X in SF scope). In subsequent calls, use the returned ID instead of #ref. Use model_query_params to discover valid parameter names. Operations continue on error.\n\nIMPORTANT: The operations parameter MUST be single-line JSON with no newlines.",
+      "description": "Make structural changes or configure parameters in a Simulink, System Composer, or Stateflow model within ONE scope per call. Use model_read first to get block IDs.\n\nOperations (executed in array order):\n- add_block: {op, type, name?, ref?, params?, position?} - Add block or SF element. SL params e.g. {Gain: \"2.0\"}; SF types: State, Junction, Box, Data, Event, Message, StateflowFunction, EMFunction, TruthTable\n- connect: {op, target: \"blk_X.y1 -> blk_Y.u1\", params?} - Wire output to input (y=output port, u=input port); for physical ports use blk_X.portName <-> blk_Y.portName; in SF scope use portless \"#src -> #dst\" or \"? -> #dst\" (default transition); replaces existing connection if destination port occupied; params set signal properties (SL) or LabelString/ExecutionOrder (SF)\n- disconnect: {op, target: \"blk_X.y1 -> blk_Y.u1\"} - Remove connection; in SF scope target is transition sf_X, endpoint pair \"sf_X -> sf_Y\", or default \"? -> sf_X\"\n- configure: {op, target, params} - Set Simulink parameters, System Composer component properties, or SF element properties. Target types: blk_X (block params), sf_X (SF element, e.g. {LabelString: \"...\"}), blk_X.y1 -> blk_Y.u1 (signal props), config:ModelName (solver settings), or chart:ModelName (SF chart-level props, e.g. {ActionLanguage: \"MATLAB\"})\n- delete: {op, target: \"blk_X\"} - Remove block\n- replace_block: {op, target: \"blk_X\", type, ref?, params?} - Replace block with different type; preserves name, position, connections\n- create_subsystem: {op, name, ref?, interface: {inputs, outputs}} - Create subsystem; connect via #ref.yN/#ref.uN (N = port number from interface)\n\nFor parameter-only changes (no structural edits), use configure operations alone.\n\nChaining: Use \"ref\" to name a new block, \"#ref\" to reference it within the same call:\n  [{op: \"add_block\", type: \"Gain\", ref: \"g1\"}, {op: \"connect\", target: \"blk_5.y1 -> #g1.u1\"}]\n\nResponse \"created\" map shows ref \u2192 blk_id (or sf_X in SF scope). In subsequent calls, use the returned ID instead of #ref. Use model_query_params to discover valid parameter names. Operations continue on error.\n\nIMPORTANT: The operations parameter MUST be single-line JSON with no newlines.",
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": true,
@@ -177,7 +177,7 @@
     {
       "name": "model_check",
       "title": "Model Check",
-      "description": "Validate a Simulink model for structural issues. Detects unconnected ports, dangling signal lines, and Stateflow edit-time lint errors. Use after model_edit to catch connectivity problems, or to audit an existing model's structural health.\n\nChecks available:\n- unconnected_ports: blocks with inputs/outputs that have no signal connected\n- unconnected_lines: signal lines missing a source or destination\n- stateflow_lint: edit-time lint diagnostics on Chart and StateTransitionTable blocks\n\nReturns issue list with severity (error/warning), block IDs, and actionable messages. Use scope to focus on a specific subsystem for faster, targeted validation.",
+      "description": "Validate a Simulink model for structural issues. Prefer model_context first when deciding what scope to inspect; then run model_check on the narrowest relevant scope after edits or when structural validation is explicitly needed.\n\nValidate a Simulink model for structural issues. Detects unconnected ports, dangling signal lines, and Stateflow edit-time lint errors. Use after model_edit to catch connectivity problems, or to audit an existing model's structural health.\n\nChecks available:\n- unconnected_ports: blocks with inputs/outputs that have no signal connected\n- unconnected_lines: signal lines missing a source or destination\n- stateflow_lint: edit-time lint diagnostics on Chart and StateTransitionTable blocks\n\nReturns issue list with severity (error/warning), block IDs, and actionable messages. Use scope to focus on a specific subsystem for faster, targeted validation.",
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
@@ -210,7 +210,7 @@
     {
       "name": "model_test",
       "title": "Model Test",
-      "description": "Execute behavioral tests against a Simulink model using a Gherkin-format specification file. Auto-creates test artifacts and returns pytest-style results. IMPORTANT: Load the 'testing-simulink-models' skill before writing .feature files — the Gherkin format requires TOML front-matter and custom step syntax not found in standard Gherkin. ROUTING: When a user asks to 'generate tests', 'write test cases', or 'verify requirements' for a Simulink model or subsystem, ALWAYS use this tool with the testing-simulink-models skill — never write matlab.unittest.TestCase classes that reimplement model logic in MATLAB.",
+      "description": "Execute behavioral tests against a Simulink model using a Gherkin-format specification file. Auto-creates test artifacts and returns pytest-style results. IMPORTANT: Load the 'testing-simulink-models' skill before writing .feature files \u2014 the Gherkin format requires TOML front-matter and custom step syntax not found in standard Gherkin. ROUTING: When a user asks to 'generate tests', 'write test cases', or 'verify requirements' for a Simulink model or subsystem, ALWAYS use this tool with the testing-simulink-models skill \u2014 never write matlab.unittest.TestCase classes that reimplement model logic in MATLAB.",
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": false,
@@ -256,6 +256,224 @@
           "verbose",
           "draft_mode",
           "coverage"
+        ]
+      }
+    },
+    {
+      "name": "model_cache_status",
+      "title": "Model Cache Status",
+      "description": "Check whether a project-local, scope/detail Simulink analysis cache record exists and is fresh. Does not run live model analysis.",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "Model filename/path (e.g. MyModel.slx)"
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope: root or Simulink block/subsystem path"
+          },
+          "detail": {
+            "type": "string",
+            "description": "Cached detail name, default summary"
+          }
+        },
+        "required": [
+          "model",
+          "scope",
+          "detail"
+        ]
+      }
+    },
+    {
+      "name": "model_cache_get",
+      "title": "Model Cache Get",
+      "description": "Return a cached Simulink analysis record for model/scope/detail without live analysis.",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "model",
+          "scope",
+          "detail"
+        ]
+      }
+    },
+    {
+      "name": "model_cache_update",
+      "title": "Model Cache Update",
+      "description": "Run cheap compile-free scoped Simulink analysis and update the project-local cache. Prototype supports summary analysis with depth 1.",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "analysis": {
+            "type": "string",
+            "description": "JSON array of analysis names, currently [\"summary\"]"
+          },
+          "force": {
+            "type": "string",
+            "description": "true/false"
+          }
+        },
+        "required": [
+          "model",
+          "scope",
+          "analysis",
+          "force"
+        ]
+      }
+    },
+    {
+      "name": "model_analyze_cached",
+      "title": "Model Analyze Cached",
+      "description": "Cache-first scoped Simulink analysis. Returns fresh cache if available; otherwise runs the minimum cheap live analysis and updates cache. Prototype is compile-free and summary-oriented.",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "checks": {
+            "type": "string",
+            "description": "JSON array of requested checks/details, currently [\"summary\"]"
+          },
+          "cachePolicy": {
+            "type": "string",
+            "enum": [
+              "cache-only",
+              "use-if-fresh",
+              "refresh-if-stale",
+              "force-refresh",
+              "do-not-cache"
+            ]
+          }
+        },
+        "required": [
+          "model",
+          "scope",
+          "checks",
+          "cachePolicy"
+        ]
+      }
+    },
+    {
+      "name": "model_context",
+      "title": "Model Context",
+      "description": "FIRST-CHOICE tool for cache-aware Simulink working context. Use this before model_overview/model_read for engineering tasks, feature changes, debugging, or when first encountering a model. It resolves model/scope when set to auto, uses cached project/model/block context, avoids full recursive analysis and compile by default, and returns compact relevant context plus suggested next tool calls.",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "Natural-language engineering task or question"
+          },
+          "model": {
+            "type": "string",
+            "description": "Model filename/path or auto"
+          },
+          "scope": {
+            "type": "string",
+            "description": "root, auto, or Simulink block/subsystem path"
+          },
+          "budget": {
+            "type": "string",
+            "description": "cheap, normal, or deep. Prototype honors cheap behavior."
+          },
+          "cachePolicy": {
+            "type": "string",
+            "enum": [
+              "cache-only",
+              "use-if-fresh",
+              "refresh-if-stale",
+              "force-refresh",
+              "do-not-cache"
+            ]
+          }
+        },
+        "required": [
+          "task",
+          "model",
+          "scope",
+          "budget",
+          "cachePolicy"
+        ]
+      }
+    },
+    {
+      "name": "model_cache_invalidate",
+      "title": "Model Cache Invalidate",
+      "description": "Invalidate project-local Simulink cache records for a model/scope plus the block index. Use after model_edit or manual model changes; the next model_context call refreshes lazily.",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "Model filename/path or loaded model name"
+          },
+          "scope": {
+            "type": "string",
+            "description": "root or Simulink block/subsystem path to invalidate"
+          }
+        },
+        "required": [
+          "model",
+          "scope"
         ]
       }
     }
@@ -332,6 +550,69 @@
           "verbose",
           "draft_mode",
           "coverage"
+        ]
+      }
+    },
+    "model_cache_status": {
+      "function": "model_cache_status",
+      "input": {
+        "order": [
+          "model",
+          "scope",
+          "detail"
+        ]
+      }
+    },
+    "model_cache_get": {
+      "function": "model_cache_get",
+      "input": {
+        "order": [
+          "model",
+          "scope",
+          "detail"
+        ]
+      }
+    },
+    "model_cache_update": {
+      "function": "model_cache_update",
+      "input": {
+        "order": [
+          "model",
+          "scope",
+          "analysis",
+          "force"
+        ]
+      }
+    },
+    "model_analyze_cached": {
+      "function": "model_analyze_cached",
+      "input": {
+        "order": [
+          "model",
+          "scope",
+          "checks",
+          "cachePolicy"
+        ]
+      }
+    },
+    "model_context": {
+      "function": "model_context",
+      "input": {
+        "order": [
+          "task",
+          "model",
+          "scope",
+          "budget",
+          "cachePolicy"
+        ]
+      }
+    },
+    "model_cache_invalidate": {
+      "function": "model_cache_invalidate",
+      "input": {
+        "order": [
+          "model",
+          "scope"
         ]
       }
     }
