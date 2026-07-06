@@ -53,6 +53,17 @@ The Simulink Agentic Toolkit works with any AI coding agent that supports skills
 | [Sourcegraph Amp](https://ampcode.com/) | Automated |
 
 
+## Cache-aware fork setup
+
+This fork includes an experimental cache-aware Simulink context layer. To install this fork for local Pi/MCP use, run in MATLAB:
+
+```matlab
+addpath("<path-to-this-fork>")
+setupCacheAwareSATK("install")
+```
+
+This points the Pi MCP configuration at this fork's `tools/tools.json`, initializes SATK, and verifies that `model_context` is available. Existing MCP config is backed up before being overwritten.
+
 ## Get Started with the Simulink Agentic Toolkit
 
 These steps show you how to use the Simulink Agentic Toolkit to install the MATLAB MCP Server and add skills to your agent.

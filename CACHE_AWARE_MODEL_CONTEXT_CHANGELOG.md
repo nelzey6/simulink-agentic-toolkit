@@ -6,6 +6,23 @@ This branch adds a prototype cache-aware model context layer for the Simulink Ag
 
 Added a first-choice `model_context` MCP tool plus lower-level cache tools. The new layer provides compact, task-oriented Simulink working context using project-local JSON cache records. It avoids full recursive traversal and model compile by default.
 
+## Bootstrap installer
+
+Added `setupCacheAwareSATK.m` as a fork-local installer/bootstrap wrapper. It:
+
+- adds the fork and cache tools to the MATLAB path,
+- runs `satk_initialize` when available,
+- writes a Pi MCP config pointing to this fork's `tools/tools.json`,
+- backs up an existing MCP config before overwriting,
+- verifies that `model_context` and `model_cache_invalidate` are visible.
+
+Example:
+
+```matlab
+addpath("D:/Repos/GitHub/simulink-agentic-toolkit")
+setupCacheAwareSATK("install")
+```
+
 ## New MCP tools
 
 ### `model_context`
