@@ -1,18 +1,13 @@
-function out = model_test_manager_run(test_file, tests, parallel, report, runner)
+function out = model_test_manager_run(test_file, tests, parallel, report)
 %MODEL_TEST_MANAGER_RUN Run selected/full native Simulink Test Manager tests.
 % tests is JSON array of full/partial test names. report is JSON object with
-% fields output_dir, junit, pdf. runner: matlab_unittest (default) or testmanager.
+% fields output_dir, junit, and pdf.
 if nargin < 2, tests = '[]'; end
 if nargin < 3 || strlength(string(parallel)) == 0, parallel = 'false'; end
 if nargin < 4, report = '{}'; end
-if nargin < 5 || strlength(string(runner)) == 0, runner = 'matlab_unittest'; end
 satkproject.requireSimulinkTest('model_test_manager_run');
 test_file = satkproject.resolveFile(test_file, '.mldatx');
-if strcmpi(char(string(runner)), 'testmanager')
-    out = runWithTestManager(test_file, parallel);
-else
-    out = runWithUnittest(test_file, tests, parallel, report);
-end
+out = runWithUnittest(test_file, tests, parallel, report);
 end
 
 function out = runWithUnittest(test_file, tests, parallel, report)
@@ -55,7 +50,6 @@ else
     results = tr.run(suite);
 end
 out = summarizeUnittest(results, test_file, artifacts, outputDir);
-try satkproject.invalidateCacheCategory(satkproject.findProjectRoot(test_file), 'results'); catch, end
 end
 
 function out = summarizeUnittest(results, test_file, artifacts, outputDir)
@@ -74,18 +68,4 @@ end
 status = 'passed'; if any(failed) || any(incomplete), status = 'failed'; end
 out = struct('status',status,'test_file',test_file,'total',n,'passed',sum(passed), ...
     'failed',sum(failed),'incomplete',sum(incomplete),'failures',fails,'artifacts',artifacts,'output_dir',outputDir);
-end
-
-function out = runWithTestManager(test_file, parallel)
-try
-    sltest.testmanager.load(test_file);
-catch ME
-    error('model_test_manager_run:LoadFailed', 'Failed to load Simulink Test file %s: %s', test_file, ME.message);
-end
-rs = sltest.testmanager.run('Parallel', satkproject.str2logical(parallel,false));
-out = struct('status','completed','runner','testmanager','test_file',test_file,'result_set',char(string(rs)));
-try
-    out.num_failed = rs.NumFailed; out.num_passed = rs.NumPassed; out.num_total = rs.NumTotal;
-catch
-end
 end

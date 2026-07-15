@@ -1,1102 +1,535 @@
 {
-  "schemaVersion": "1.0.0",
-  "tools": [
-    {
-      "name": "model_overview",
-      "title": "Model Overview",
-      "description": "Get a high-level view of the model. Prefer model_context first for task-oriented/cache-aware context; use model_overview when you explicitly need a hierarchy/tree/interface overview.\n\nGet a high-level view of the model showing subsystem hierarchy, interfaces, and connections. Use this when first encountering a model to understand the big picture before diving into details.",
-      "annotations": {
-        "readOnlyHint": true,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "model": {
-            "type": "string",
-            "description": "Model filename (e.g. MyModel.slx)"
-          },
-          "scope": {
-            "type": "string",
-            "description": "Focus on specific subsystem. Use 'root' for entire model or a block ID like 'blk_10' for a specific subsystem"
-          },
-          "detail": {
-            "type": "string",
-            "description": "Level of detail: 'tree' (component hierarchy only \u2014 no port or signal info), 'interfaces' (component hierarchy + input/output port names for each component), or 'full' (component hierarchy + port names + top-level component signal connections)"
-          }
-        },
-        "required": [
-          "model",
-          "scope",
-          "detail"
-        ]
-      }
-    },
-    {
-      "name": "model_read",
-      "title": "Model Read",
-      "description": "Inspect the structure and algorithmic behavior of a Simulink model. Prefer model_context first for engineering tasks or initial model understanding because it is cache-aware and compact; use model_read when you specifically need SATK algorithmic expressions, block IDs, or deeper topology for a known scope.\n\nInspect the structure and algorithmic behavior of a Simulink model. Returns block topology, connections, and expressions showing what each block does.\n\nExpression notation: uN(source) = input port N with source block.port in parentheses; yN = output port N; @Param(value) = parameter with actual set-value from the block. Example: y1 = @Gain(Kp) * u1(blk_5.y1) means output 1 = Gain parameter times input 1 (from block 5's output 1). When value is numeric (e.g., @Gain(5000)), you have the final value. When value is a variable reference (e.g., @Gain(Kp)), use model_resolve_params to get the numeric value.\n\nModel Reference, Subsystem Reference, and Library blocks show interfaces only, not internal content.",
-      "annotations": {
-        "readOnlyHint": true,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "model": {
-            "type": "string",
-            "description": "Model filename (e.g. MyModel.slx)"
-          },
-          "scope": {
-            "type": "string",
-            "description": "Starting scope - use 'root' for model top level or a block ID like 'blk_16'"
-          },
-          "depth": {
-            "type": "string",
-            "description": "Hierarchy depth limit as string. '0'=current level only, '1'=one level down, 'inf'=full hierarchy"
-          }
-        },
-        "required": [
-          "model",
-          "scope",
-          "depth"
-        ]
-      }
-    },
-    {
-      "name": "model_query_params",
-      "title": "Model Query Params",
-      "description": "Provides random access to any Simulink parameter on blocks, signals, or model configuration. Complements model_read by exposing values not included in the model graph.\n\nUse when you need:\n- Parameters not in model_read expressions (sample times, state names, port dimensions)\n- Model configuration (Solver, StopTime, RelTol, code generation options)\n- Signal properties beyond names (DataLogging, OutDataTypeStr, Min, Max)\n- Targeted verification after model_configure without re-reading the full graph\n\nIf model_read already shows the value in an expression (e.g., @Gain(Kp)), you have the set-value. Use model_resolve_params to resolve variable references to numeric values.\n\nUse compile=true only if certain the parameter requires compilation (e.g., CompiledPortWidths). If unsure, use default; PARAM_UNAVAILABLE error will indicate if compile is needed.",
-      "annotations": {
-        "readOnlyHint": true,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "model": {
-            "type": "string",
-            "description": "Model filename (e.g. MyModel.slx)"
-          },
-          "targets": {
-            "type": "string",
-            "description": "JSON array of target IDs - blocks (blk_5), signals (blk_5.y1 -> blk_8.u1), or config (config:ModelName)"
-          },
-          "params": {
-            "type": "string",
-            "description": "JSON array of param names like '[\"Gain\", \"SampleTime\"]' or '[\"all\"]' for all parameters"
-          },
-          "compile": {
-            "type": "string",
-            "description": "Compile model before querying ('true' or 'false'). Required for compiled params like CompiledPortWidths"
-          }
-        },
-        "required": [
-          "model",
-          "targets",
-          "params",
-          "compile"
-        ]
-      }
-    },
-    {
-      "name": "model_resolve_params",
-      "title": "Model Resolve Params",
-      "description": "Resolve variable references from model_read expressions to actual numeric values. When model_read shows @Param(Kp), this tool returns the value of Kp from MATLAB workspaces.\n\nPass expressions exactly as seen in model_read (e.g., \"Kp\", \"cfg.gains.Ki\", \"TableData(1,:)\"). Searches base workspace, model workspace, mask workspaces, and data dictionaries.\n\nResults organized by workspace source; shadowed variables include users list to identify which blocks use each definition.\n\nUnsupported: arithmetic (Kp+Ki), function calls (sqrt(2)), matrix literals ([1 2 3]). Use evaluate_matlab_code for these.",
-      "annotations": {
-        "readOnlyHint": true,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "model": {
-            "type": "string",
-            "description": "Model filename (e.g. MyModel.slx)"
-          },
-          "expressions": {
-            "type": "string",
-            "description": "JSON array of expressions to resolve, e.g. '[\"Kp\", \"cfg.gains.Ki\"]'"
-          }
-        },
-        "required": [
-          "model",
-          "expressions"
-        ]
-      }
-    },
-    {
-      "name": "model_edit",
-      "title": "Model Edit",
-      "description": "Make structural changes or configure parameters in a Simulink, System Composer, or Stateflow model within ONE scope per call. Use model_read first to get block IDs.\n\nOperations (executed in array order):\n- add_block: {op, type, name?, ref?, params?, position?} - Add block or SF element. SL params e.g. {Gain: \"2.0\"}; SF types: State, Junction, Box, Data, Event, Message, StateflowFunction, EMFunction, TruthTable\n- connect: {op, target: \"blk_X.y1 -> blk_Y.u1\", params?} - Wire output to input (y=output port, u=input port); for physical ports use blk_X.portName <-> blk_Y.portName; in SF scope use portless \"#src -> #dst\" or \"? -> #dst\" (default transition); replaces existing connection if destination port occupied; params set signal properties (SL) or LabelString/ExecutionOrder (SF)\n- disconnect: {op, target: \"blk_X.y1 -> blk_Y.u1\"} - Remove connection; in SF scope target is transition sf_X, endpoint pair \"sf_X -> sf_Y\", or default \"? -> sf_X\"\n- configure: {op, target, params} - Set Simulink parameters, System Composer component properties, or SF element properties. Target types: blk_X (block params), sf_X (SF element, e.g. {LabelString: \"...\"}), blk_X.y1 -> blk_Y.u1 (signal props), config:ModelName (solver settings), or chart:ModelName (SF chart-level props, e.g. {ActionLanguage: \"MATLAB\"})\n- delete: {op, target: \"blk_X\"} - Remove block\n- replace_block: {op, target: \"blk_X\", type, ref?, params?} - Replace block with different type; preserves name, position, connections\n- create_subsystem: {op, name, ref?, interface: {inputs, outputs}} - Create subsystem; connect via #ref.yN/#ref.uN (N = port number from interface)\n\nFor parameter-only changes (no structural edits), use configure operations alone.\n\nChaining: Use \"ref\" to name a new block, \"#ref\" to reference it within the same call:\n  [{op: \"add_block\", type: \"Gain\", ref: \"g1\"}, {op: \"connect\", target: \"blk_5.y1 -> #g1.u1\"}]\n\nResponse \"created\" map shows ref \u2192 blk_id (or sf_X in SF scope). In subsequent calls, use the returned ID instead of #ref. Use model_query_params to discover valid parameter names. Operations continue on error.\n\nIMPORTANT: The operations parameter MUST be single-line JSON with no newlines.",
-      "annotations": {
-        "readOnlyHint": false,
-        "destructiveHint": true,
-        "idempotentHint": false,
-        "openWorldHint": false
-      },
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "model": {
-            "type": "string",
-            "description": "Model filename (e.g. MyModel.slx)"
-          },
-          "scope": {
-            "type": "string",
-            "description": "Where to operate: 'root', subsystem block ID 'blk_5', or Stateflow scope 'sf_X' (chart/state/box). Chart blk_X auto-detects as SF. All ops within this scope."
-          },
-          "operations": {
-            "type": "string",
-            "description": "JSON array of operation objects (MUST be single-line, no newlines). Each has 'op' (add_block|connect|disconnect|configure|delete|replace_block|create_subsystem) and operation-specific fields."
-          },
-          "layout_mode": {
-            "type": "string",
-            "description": "Layout mode for this call: 'full' (use when scope is empty/building from scratch) or 'incremental' (use when adding to existing model). Always provide this parameter.",
-            "enum": [
-              "full",
-              "incremental"
-            ]
-          }
-        },
-        "required": [
-          "model",
-          "scope",
-          "operations"
-        ]
-      }
-    },
-    {
-      "name": "model_check",
-      "title": "Model Check",
-      "description": "Validate a Simulink model for structural issues. Prefer model_context first when deciding what scope to inspect; then run model_check on the narrowest relevant scope after edits or when structural validation is explicitly needed.\n\nValidate a Simulink model for structural issues. Detects unconnected ports, dangling signal lines, and Stateflow edit-time lint errors. Use after model_edit to catch connectivity problems, or to audit an existing model's structural health.\n\nChecks available:\n- unconnected_ports: blocks with inputs/outputs that have no signal connected\n- unconnected_lines: signal lines missing a source or destination\n- stateflow_lint: edit-time lint diagnostics on Chart and StateTransitionTable blocks\n\nReturns issue list with severity (error/warning), block IDs, and actionable messages. Use scope to focus on a specific subsystem for faster, targeted validation.",
-      "annotations": {
-        "readOnlyHint": true,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "model": {
-            "type": "string",
-            "description": "Model filename (e.g. MyModel.slx)"
-          },
-          "scope": {
-            "type": "string",
-            "description": "Validation scope: 'root' for entire model or a block ID like 'blk_10' for a specific subsystem"
-          },
-          "checks": {
-            "type": "string",
-            "description": "JSON array of check names to run: '[\"all\"]' (default), or selective like '[\"unconnected_ports\", \"unconnected_lines\"]'. Available: unconnected_ports, unconnected_lines, stateflow_lint"
-          }
-        },
-        "required": [
-          "model",
-          "scope",
-          "checks"
-        ]
-      }
-    },
-    {
-      "name": "model_test",
-      "title": "Model Test",
-      "description": "Execute behavioral tests against a Simulink model using a Gherkin-format specification file. Auto-creates test artifacts and returns pytest-style results. IMPORTANT: Load the 'testing-simulink-models' skill before writing .feature files \u2014 the Gherkin format requires TOML front-matter and custom step syntax not found in standard Gherkin. ROUTING: When a user asks to 'generate tests', 'write test cases', or 'verify requirements' for a Simulink model or subsystem, ALWAYS use this tool with the testing-simulink-models skill \u2014 never write matlab.unittest.TestCase classes that reimplement model logic in MATLAB.",
-      "annotations": {
-        "readOnlyHint": false,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "model": {
-            "type": "string",
-            "description": "Model filename (e.g. MyModel.slx)"
-          },
-          "gherkin_file": {
-            "type": "string",
-            "description": "Path to Gherkin test specification file"
-          },
-          "scenarios": {
-            "type": "string",
-            "description": "JSON array of scenario names to run, e.g. '[\"Scenario1\", \"Scenario2\"]'. Use '[]' to run all scenarios."
-          },
-          "verbose": {
-            "type": "string",
-            "description": "Include signal traces on failure ('true' or 'false'). Default: false"
-          },
-          "draft_mode": {
-            "type": "string",
-            "description": "Skip main model compile for faster iteration ('true' or 'false'). Use 'true' by default for rapid test development (~3s vs ~60s). If draft mode fails due to type/bus/dimension issues, re-run with 'false'. Default: false"
-          },
-          "coverage": {
-            "type": "string",
-            "enum": [
-              "none",
-              "decision"
-            ],
-            "description": "Coverage metric to collect: 'none' (default) or 'decision'. Requires Simulink Coverage toolbox."
-          }
-        },
-        "required": [
-          "model",
-          "gherkin_file",
-          "scenarios",
-          "verbose",
-          "draft_mode",
-          "coverage"
-        ]
-      }
-    },
-    {
-      "name": "model_cache_status",
-      "title": "Model Cache Status",
-      "description": "Check whether a project-local, scope/detail Simulink analysis cache record exists and is fresh. Does not run live model analysis.",
-      "annotations": {
-        "readOnlyHint": true,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "model": {
-            "type": "string",
-            "description": "Model filename/path (e.g. MyModel.slx)"
-          },
-          "scope": {
-            "type": "string",
-            "description": "Scope: root or Simulink block/subsystem path"
-          },
-          "detail": {
-            "type": "string",
-            "description": "Cached detail name, default summary"
-          }
-        },
-        "required": [
-          "model",
-          "scope",
-          "detail"
-        ]
-      }
-    },
-    {
-      "name": "model_cache_get",
-      "title": "Model Cache Get",
-      "description": "Return a cached Simulink analysis record for model/scope/detail without live analysis.",
-      "annotations": {
-        "readOnlyHint": true,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "model": {
-            "type": "string"
-          },
-          "scope": {
-            "type": "string"
-          },
-          "detail": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "model",
-          "scope",
-          "detail"
-        ]
-      }
-    },
-    {
-      "name": "model_cache_update",
-      "title": "Model Cache Update",
-      "description": "Run cheap compile-free scoped Simulink analysis and update the project-local cache. Prototype supports summary analysis with depth 1.",
-      "annotations": {
-        "readOnlyHint": true,
-        "destructiveHint": false,
-        "idempotentHint": false,
-        "openWorldHint": false
-      },
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "model": {
-            "type": "string"
-          },
-          "scope": {
-            "type": "string"
-          },
-          "analysis": {
-            "type": "string",
-            "description": "JSON array of analysis names, currently [\"summary\"]"
-          },
-          "force": {
-            "type": "string",
-            "description": "true/false"
-          }
-        },
-        "required": [
-          "model",
-          "scope",
-          "analysis",
-          "force"
-        ]
-      }
-    },
-    {
-      "name": "model_analyze_cached",
-      "title": "Model Analyze Cached",
-      "description": "Cache-first scoped Simulink analysis. Returns fresh cache if available; otherwise runs the minimum cheap live analysis and updates cache. Prototype is compile-free and summary-oriented.",
-      "annotations": {
-        "readOnlyHint": true,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "model": {
-            "type": "string"
-          },
-          "scope": {
-            "type": "string"
-          },
-          "checks": {
-            "type": "string",
-            "description": "JSON array of requested checks/details, currently [\"summary\"]"
-          },
-          "cachePolicy": {
-            "type": "string",
-            "enum": [
-              "cache-only",
-              "use-if-fresh",
-              "refresh-if-stale",
-              "force-refresh",
-              "do-not-cache"
-            ]
-          }
-        },
-        "required": [
-          "model",
-          "scope",
-          "checks",
-          "cachePolicy"
-        ]
-      }
-    },
-    {
-      "name": "model_context",
-      "title": "Model Context",
-      "description": "FIRST-CHOICE cache-aware Simulink working context and read planner. Use before model_read/model_overview for engineering tasks. It checks fresh project/model cache first, refreshes only shallow scoped summaries by default, recommends targeted model_read calls when exact block IDs/ports are needed, and avoids broad deep reads unless explicitly justified.\n\nFIRST-CHOICE tool for cache-aware Simulink working context. Use this before model_overview/model_read for engineering tasks, feature changes, debugging, or when first encountering a model. It resolves model/scope when set to auto, uses cached project/model/block context, avoids full recursive analysis and compile by default, and returns compact relevant context plus suggested next tool calls.",
-      "annotations": {
-        "readOnlyHint": true,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "task": {
-            "type": "string",
-            "description": "Natural-language engineering task or question"
-          },
-          "model": {
-            "type": "string",
-            "description": "Model filename/path or auto"
-          },
-          "scope": {
-            "type": "string",
-            "description": "root, auto, or Simulink block/subsystem path"
-          },
-          "budget": {
-            "type": "string",
-            "description": "cheap, normal, or deep. Prototype honors cheap behavior."
-          },
-          "cachePolicy": {
-            "type": "string",
-            "enum": [
-              "cache-only",
-              "use-if-fresh",
-              "refresh-if-stale",
-              "force-refresh",
-              "do-not-cache"
-            ]
-          }
-        },
-        "required": [
-          "task",
-          "model",
-          "scope"
-        ]
-      }
-    },
-    {
-      "name": "model_cache_invalidate",
-      "title": "Model Cache Invalidate",
-      "description": "Invalidate project-local Simulink cache records for a model/scope plus the block index. Use after model_edit or manual model changes; the next model_context call refreshes lazily.",
-      "annotations": {
-        "readOnlyHint": false,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "model": {
-            "type": "string",
-            "description": "Model filename/path or loaded model name"
-          },
-          "scope": {
-            "type": "string",
-            "description": "root or Simulink block/subsystem path to invalidate"
-          }
-        },
-        "required": [
-          "model",
-          "scope"
-        ]
-      }
-    },
-    {
-      "name": "model_project_setup",
-      "title": "Model Project Setup",
-      "description": "Prepare MATLAB/SATK and run a project startup script for OA/Simulink workflows. Returns setup status, tool availability, and repo inventory.",
-      "annotations": {
-        "readOnlyHint": false,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "repo": {
-            "type": "string",
-            "description": "Project or repository root path, or auto for current folder"
-          },
-          "startup": {
-            "type": "string",
-            "description": "Startup script path relative to repo or absolute, e.g. matlab/startup.m"
-          },
-          "toolkit_root": {
-            "type": "string",
-            "description": "Optional SATK repo root to add to MATLAB path"
-          }
-        },
-        "required": [
-          "repo",
-          "startup",
-          "toolkit_root"
-        ]
-      }
-    },
-    {
-      "name": "model_project_inventory",
-      "title": "Model Project Inventory",
-      "description": "Cache-aware discovery of Simulink models, libraries, dictionaries, harnesses, Simulink Test Manager files, feature files, and MATLAB scripts in a repo.",
-      "annotations": {
-        "readOnlyHint": true,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "repo": {
-            "type": "string",
-            "description": "Project or repository root path"
-          },
-          "cachePolicy": {
-            "type": "string",
-            "enum": [
-              "cache-only",
-              "use-if-fresh",
-              "refresh-if-stale",
-              "force-refresh",
-              "do-not-cache"
-            ],
-            "description": "Cache policy. Default use-if-fresh."
-          }
-        },
-        "required": [
-          "repo",
-          "cachePolicy"
-        ]
-      }
-    },
-    {
-      "name": "model_harness_list",
-      "title": "Model Harness List",
-      "description": "Cache-aware list of Simulink Test harnesses for a model or component using sltest.harness.find.",
-      "annotations": {
-        "readOnlyHint": true,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "model": {
-            "type": "string",
-            "description": "Model filename/path, e.g. FCTB_SpeedControl.slx"
-          },
-          "component": {
-            "type": "string",
-            "description": "Harness owner component path or auto"
-          },
-          "searchDepth": {
-            "type": "string",
-            "description": "Search depth: all or nonnegative integer"
-          },
-          "cachePolicy": {
-            "type": "string",
-            "enum": [
-              "cache-only",
-              "use-if-fresh",
-              "refresh-if-stale",
-              "force-refresh",
-              "do-not-cache"
-            ],
-            "description": "Cache policy. Default use-if-fresh."
-          }
-        },
-        "required": [
-          "model",
-          "component",
-          "searchDepth",
-          "cachePolicy"
-        ]
-      }
-    },
-    {
-      "name": "model_harness_create",
-      "title": "Model Harness Create",
-      "description": "Create a Simulink Test harness using sltest.harness.create. After creation, use model_harness_open and model_read/model_edit to edit harness contents.",
-      "annotations": {
-        "readOnlyHint": false,
-        "destructiveHint": true,
-        "idempotentHint": false,
-        "openWorldHint": false
-      },
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "model": {
-            "type": "string",
-            "description": "Model filename/path to load"
-          },
-          "component": {
-            "type": "string",
-            "description": "Harness owner component path"
-          },
-          "harness_name": {
-            "type": "string",
-            "description": "New harness name"
-          },
-          "save_externally": {
-            "type": "string",
-            "description": "true/false, save harness as external SLX"
-          },
-          "harness_path": {
-            "type": "string",
-            "description": "External harness file/folder path"
-          },
-          "source": {
-            "type": "string",
-            "description": "Harness source type, e.g. Inport, Signal Editor, From Workspace"
-          },
-          "sink": {
-            "type": "string",
-            "description": "Harness sink type, e.g. Outport, Scope, To Workspace"
-          },
-          "create_without_compile": {
-            "type": "string",
-            "description": "true/false"
-          }
-        },
-        "required": [
-          "model",
-          "component",
-          "harness_name",
-          "save_externally",
-          "harness_path",
-          "source",
-          "sink",
-          "create_without_compile"
-        ]
-      }
-    },
-    {
-      "name": "model_harness_open",
-      "title": "Model Harness Open",
-      "description": "Open an existing Simulink Test harness for editing. Then use model_read/model_edit on the opened harness model.",
-      "annotations": {
-        "readOnlyHint": false,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "model": {
-            "type": "string",
-            "description": "Owner model filename/path"
-          },
-          "component": {
-            "type": "string",
-            "description": "Harness owner component path"
-          },
-          "harness_name": {
-            "type": "string",
-            "description": "Harness name"
-          }
-        },
-        "required": [
-          "model",
-          "component",
-          "harness_name"
-        ]
-      }
-    },
-    {
-      "name": "model_harness_save",
-      "title": "Model Harness Save",
-      "description": "Save an open Simulink Test harness.",
-      "annotations": {
-        "readOnlyHint": false,
-        "destructiveHint": false,
-        "idempotentHint": false,
-        "openWorldHint": false
-      },
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "model": {
-            "type": "string",
-            "description": "Owner model filename/path"
-          },
-          "component": {
-            "type": "string",
-            "description": "Harness owner component path"
-          },
-          "harness_name": {
-            "type": "string",
-            "description": "Harness name"
-          }
-        },
-        "required": [
-          "model",
-          "component",
-          "harness_name"
-        ]
-      }
-    },
-    {
-      "name": "model_harness_close",
-      "title": "Model Harness Close",
-      "description": "Close an open Simulink Test harness, optionally saving first.",
-      "annotations": {
-        "readOnlyHint": false,
-        "destructiveHint": false,
-        "idempotentHint": false,
-        "openWorldHint": false
-      },
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "model": {
-            "type": "string",
-            "description": "Owner model filename/path"
-          },
-          "component": {
-            "type": "string",
-            "description": "Harness owner component path"
-          },
-          "harness_name": {
-            "type": "string",
-            "description": "Harness name"
-          },
-          "save_before_close": {
-            "type": "string",
-            "description": "true/false, default true"
-          }
-        },
-        "required": [
-          "model",
-          "component",
-          "harness_name",
-          "save_before_close"
-        ]
-      }
-    },
-    {
-      "name": "model_test_manager_list",
-      "title": "Model Test Manager List",
-      "description": "Cache-aware inspection of a Simulink Test Manager .mldatx file. Lists suites, test cases, harness mappings, stop times, modes, assessments, baselines, and iteration counts.",
-      "annotations": {
-        "readOnlyHint": true,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "test_file": {
-            "type": "string",
-            "description": "Path to .mldatx test file"
-          },
-          "cachePolicy": {
-            "type": "string",
-            "enum": [
-              "cache-only",
-              "use-if-fresh",
-              "refresh-if-stale",
-              "force-refresh",
-              "do-not-cache"
-            ],
-            "description": "Cache policy. Default use-if-fresh."
-          }
-        },
-        "required": [
-          "test_file",
-          "cachePolicy"
-        ]
-      }
-    },
-    {
-      "name": "model_test_manager_create_case",
-      "title": "Model Test Manager Create Case",
-      "description": "Create a native Simulink Test Manager test case in an existing .mldatx file, optionally assigning model/component/harness and stop time.",
-      "annotations": {
-        "readOnlyHint": false,
-        "destructiveHint": true,
-        "idempotentHint": false,
-        "openWorldHint": false
-      },
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "test_file": {
-            "type": "string",
-            "description": "Path to .mldatx test file"
-          },
-          "suite": {
-            "type": "string",
-            "description": "Suite name to create/use"
-          },
-          "test_case": {
-            "type": "string",
-            "description": "New test case name"
-          },
-          "test_type": {
-            "type": "string",
-            "description": "simulation, baseline, or equivalence"
-          },
-          "model": {
-            "type": "string",
-            "description": "System-under-test model name/path"
-          },
-          "component": {
-            "type": "string",
-            "description": "Harness owner/component path"
-          },
-          "harness": {
-            "type": "string",
-            "description": "Harness name"
-          },
-          "stop_time": {
-            "type": "string",
-            "description": "Stop time seconds"
-          }
-        },
-        "required": [
-          "test_file",
-          "suite",
-          "test_case",
-          "test_type",
-          "model",
-          "component",
-          "harness",
-          "stop_time"
-        ]
-      }
-    },
-    {
-      "name": "model_test_manager_configure_case",
-      "title": "Model Test Manager Configure Case",
-      "description": "Configure a native Simulink Test Manager test case. The config JSON object supports enabled, model, harness, harness_owner, stop_time, start_time, simulation_mode, callbacks, and arbitrary setProperty values.",
-      "annotations": {
-        "readOnlyHint": false,
-        "destructiveHint": true,
-        "idempotentHint": false,
-        "openWorldHint": false
-      },
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "test_file": {
-            "type": "string",
-            "description": "Path to .mldatx test file"
-          },
-          "suite": {
-            "type": "string",
-            "description": "Suite name"
-          },
-          "test_case": {
-            "type": "string",
-            "description": "Test case name or full TestPath"
-          },
-          "config": {
-            "type": "string",
-            "description": "JSON object with supported configuration fields"
-          }
-        },
-        "required": [
-          "test_file",
-          "suite",
-          "test_case",
-          "config"
-        ]
-      }
-    },
-    {
-      "name": "model_test_manager_run",
-      "title": "Model Test Manager Run",
-      "description": "Run selected or full native Simulink Test Manager tests. Default runner uses MATLAB unittest testsuite(.mldatx) for repo/CI compatibility and can emit JUnit/PDF artifacts.",
-      "annotations": {
-        "readOnlyHint": false,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "test_file": {
-            "type": "string",
-            "description": "Path to .mldatx test file"
-          },
-          "tests": {
-            "type": "string",
-            "description": "JSON array of selected full/partial test names; [] runs all"
-          },
-          "parallel": {
-            "type": "string",
-            "description": "true/false"
-          },
-          "report": {
-            "type": "string",
-            "description": "JSON object: {\"output_dir\":\"...\",\"junit\":true,\"pdf\":false}"
-          },
-          "runner": {
-            "type": "string",
-            "description": "matlab_unittest (default) or testmanager"
-          }
-        },
-        "required": [
-          "test_file",
-          "tests",
-          "parallel",
-          "report",
-          "runner"
-        ]
-      }
-    },
-    {
-      "name": "model_test_manager_results",
-      "title": "Model Test Manager Results",
-      "description": "Cache-aware summary of JUnit XML test results or latest Simulink Test Manager result sets.",
-      "annotations": {
-        "readOnlyHint": true,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      },
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "result_source": {
-            "type": "string",
-            "description": "JUnit XML path, e.g. matlab/work/results/TestReport.xml, or empty for default"
-          },
-          "cachePolicy": {
-            "type": "string",
-            "enum": [
-              "cache-only",
-              "use-if-fresh",
-              "refresh-if-stale",
-              "force-refresh",
-              "do-not-cache"
-            ],
-            "description": "Cache policy. Default use-if-fresh."
-          }
-        },
-        "required": [
-          "result_source",
-          "cachePolicy"
-        ]
-      }
-    }
-  ],
-  "signatures": {
-    "model_overview": {
-      "function": "model_overview",
-      "input": {
-        "order": [
-          "model",
-          "scope",
-          "detail"
-        ]
-      }
-    },
-    "model_read": {
-      "function": "model_read",
-      "input": {
-        "order": [
-          "model",
-          "scope",
-          "depth"
-        ]
-      }
-    },
-    "model_query_params": {
-      "function": "model_query_params",
-      "input": {
-        "order": [
-          "model",
-          "targets",
-          "params",
-          "compile"
-        ]
-      }
-    },
-    "model_resolve_params": {
-      "function": "model_resolve_params",
-      "input": {
-        "order": [
-          "model",
-          "expressions"
-        ]
-      }
-    },
-    "model_edit": {
-      "function": "model_edit",
-      "input": {
-        "order": [
-          "model",
-          "scope",
-          "operations",
-          "layout_mode"
-        ]
-      }
-    },
-    "model_check": {
-      "function": "model_check",
-      "input": {
-        "order": [
-          "model",
-          "scope",
-          "checks"
-        ]
-      }
-    },
-    "model_test": {
-      "function": "model_test",
-      "input": {
-        "order": [
-          "model",
-          "gherkin_file",
-          "scenarios",
-          "verbose",
-          "draft_mode",
-          "coverage"
-        ]
-      }
-    },
-    "model_cache_status": {
-      "function": "model_cache_status",
-      "input": {
-        "order": [
-          "model",
-          "scope",
-          "detail"
-        ]
-      }
-    },
-    "model_cache_get": {
-      "function": "model_cache_get",
-      "input": {
-        "order": [
-          "model",
-          "scope",
-          "detail"
-        ]
-      }
-    },
-    "model_cache_update": {
-      "function": "model_cache_update",
-      "input": {
-        "order": [
-          "model",
-          "scope",
-          "analysis",
-          "force"
-        ]
-      }
-    },
-    "model_analyze_cached": {
-      "function": "model_analyze_cached",
-      "input": {
-        "order": [
-          "model",
-          "scope",
-          "checks",
-          "cachePolicy"
-        ]
-      }
-    },
-    "model_context": {
-      "function": "model_context",
-      "input": {
-        "order": [
-          "task",
-          "model",
-          "scope",
-          "budget",
-          "cachePolicy"
-        ]
-      }
-    },
-    "model_cache_invalidate": {
-      "function": "model_cache_invalidate",
-      "input": {
-        "order": [
-          "model",
-          "scope"
-        ]
-      }
-    }
-  }
+    "schemaVersion":  "1.0.0",
+    "tools":  [
+                  {
+                      "name":  "model_overview",
+                      "title":  "Model Overview",
+                      "description":  "Get a high-level view of the model. Prefer model_context first for task-oriented/cache-aware context; use model_overview when you explicitly need a hierarchy/tree/interface overview.\n\nGet a high-level view of the model showing subsystem hierarchy, interfaces, and connections. Use this when first encountering a model to understand the big picture before diving into details.",
+                      "annotations":  {
+                                          "readOnlyHint":  true,
+                                          "destructiveHint":  false,
+                                          "idempotentHint":  true,
+                                          "openWorldHint":  false
+                                      },
+                      "inputSchema":  {
+                                          "type":  "object",
+                                          "properties":  {
+                                                             "model":  {
+                                                                           "type":  "string",
+                                                                           "description":  "Model filename (e.g. MyModel.slx)"
+                                                                       },
+                                                             "scope":  {
+                                                                           "type":  "string",
+                                                                           "description":  "Focus on specific subsystem. Use \u0027root\u0027 for entire model or a block ID like \u0027blk_10\u0027 for a specific subsystem"
+                                                                       },
+                                                             "detail":  {
+                                                                            "type":  "string",
+                                                                            "description":  "Level of detail: \u0027tree\u0027 (component hierarchy only — no port or signal info), \u0027interfaces\u0027 (component hierarchy + input/output port names for each component), or \u0027full\u0027 (component hierarchy + port names + top-level component signal connections)"
+                                                                        }
+                                                         },
+                                          "required":  [
+                                                           "model",
+                                                           "scope",
+                                                           "detail"
+                                                       ]
+                                      }
+                  },
+                  {
+                      "name":  "model_read",
+                      "title":  "Model Read",
+                      "description":  "Inspect the structure and algorithmic behavior of a Simulink model. Prefer model_context first for engineering tasks or initial model understanding because it is cache-aware and compact; use model_read when you specifically need SATK algorithmic expressions, block IDs, or deeper topology for a known scope.\n\nInspect the structure and algorithmic behavior of a Simulink model. Returns block topology, connections, and expressions showing what each block does.\n\nExpression notation: uN(source) = input port N with source block.port in parentheses; yN = output port N; @Param(value) = parameter with actual set-value from the block. Example: y1 = @Gain(Kp) * u1(blk_5.y1) means output 1 = Gain parameter times input 1 (from block 5\u0027s output 1). When value is numeric (e.g., @Gain(5000)), you have the final value. When value is a variable reference (e.g., @Gain(Kp)), use model_resolve_params to get the numeric value.\n\nModel Reference, Subsystem Reference, and Library blocks show interfaces only, not internal content.",
+                      "annotations":  {
+                                          "readOnlyHint":  true,
+                                          "destructiveHint":  false,
+                                          "idempotentHint":  true,
+                                          "openWorldHint":  false
+                                      },
+                      "inputSchema":  {
+                                          "type":  "object",
+                                          "properties":  {
+                                                             "model":  {
+                                                                           "type":  "string",
+                                                                           "description":  "Model filename (e.g. MyModel.slx)"
+                                                                       },
+                                                             "scope":  {
+                                                                           "type":  "string",
+                                                                           "description":  "Starting scope - use \u0027root\u0027 for model top level or a block ID like \u0027blk_16\u0027"
+                                                                       },
+                                                             "depth":  {
+                                                                           "type":  "string",
+                                                                           "description":  "Hierarchy depth limit as string. \u00270\u0027=current level only, \u00271\u0027=one level down, \u0027inf\u0027=full hierarchy"
+                                                                       }
+                                                         },
+                                          "required":  [
+                                                           "model",
+                                                           "scope",
+                                                           "depth"
+                                                       ]
+                                      }
+                  },
+                  {
+                      "name":  "model_query_params",
+                      "title":  "Model Query Params",
+                      "description":  "Provides random access to any Simulink parameter on blocks, signals, or model configuration. Complements model_read by exposing values not included in the model graph.\n\nUse when you need:\n- Parameters not in model_read expressions (sample times, state names, port dimensions)\n- Model configuration (Solver, StopTime, RelTol, code generation options)\n- Signal properties beyond names (DataLogging, OutDataTypeStr, Min, Max)\n- Targeted verification after model_configure without re-reading the full graph\n\nIf model_read already shows the value in an expression (e.g., @Gain(Kp)), you have the set-value. Use model_resolve_params to resolve variable references to numeric values.\n\nUse compile=true only if certain the parameter requires compilation (e.g., CompiledPortWidths). If unsure, use default; PARAM_UNAVAILABLE error will indicate if compile is needed.",
+                      "annotations":  {
+                                          "readOnlyHint":  true,
+                                          "destructiveHint":  false,
+                                          "idempotentHint":  true,
+                                          "openWorldHint":  false
+                                      },
+                      "inputSchema":  {
+                                          "type":  "object",
+                                          "properties":  {
+                                                             "model":  {
+                                                                           "type":  "string",
+                                                                           "description":  "Model filename (e.g. MyModel.slx)"
+                                                                       },
+                                                             "targets":  {
+                                                                             "type":  "string",
+                                                                             "description":  "JSON array of target IDs - blocks (blk_5), signals (blk_5.y1 -\u003e blk_8.u1), or config (config:ModelName)"
+                                                                         },
+                                                             "params":  {
+                                                                            "type":  "string",
+                                                                            "description":  "JSON array of param names like \u0027[\"Gain\", \"SampleTime\"]\u0027 or \u0027[\"all\"]\u0027 for all parameters"
+                                                                        },
+                                                             "compile":  {
+                                                                             "type":  "string",
+                                                                             "description":  "Compile model before querying (\u0027true\u0027 or \u0027false\u0027). Required for compiled params like CompiledPortWidths"
+                                                                         }
+                                                         },
+                                          "required":  [
+                                                           "model",
+                                                           "targets",
+                                                           "params",
+                                                           "compile"
+                                                       ]
+                                      }
+                  },
+                  {
+                      "name":  "model_resolve_params",
+                      "title":  "Model Resolve Params",
+                      "description":  "Resolve variable references from model_read expressions to actual numeric values. When model_read shows @Param(Kp), this tool returns the value of Kp from MATLAB workspaces.\n\nPass expressions exactly as seen in model_read (e.g., \"Kp\", \"cfg.gains.Ki\", \"TableData(1,:)\"). Searches base workspace, model workspace, mask workspaces, and data dictionaries.\n\nResults organized by workspace source; shadowed variables include users list to identify which blocks use each definition.\n\nUnsupported: arithmetic (Kp+Ki), function calls (sqrt(2)), matrix literals ([1 2 3]). Use evaluate_matlab_code for these.",
+                      "annotations":  {
+                                          "readOnlyHint":  true,
+                                          "destructiveHint":  false,
+                                          "idempotentHint":  true,
+                                          "openWorldHint":  false
+                                      },
+                      "inputSchema":  {
+                                          "type":  "object",
+                                          "properties":  {
+                                                             "model":  {
+                                                                           "type":  "string",
+                                                                           "description":  "Model filename (e.g. MyModel.slx)"
+                                                                       },
+                                                             "expressions":  {
+                                                                                 "type":  "string",
+                                                                                 "description":  "JSON array of expressions to resolve, e.g. \u0027[\"Kp\", \"cfg.gains.Ki\"]\u0027"
+                                                                             }
+                                                         },
+                                          "required":  [
+                                                           "model",
+                                                           "expressions"
+                                                       ]
+                                      }
+                  },
+                  {
+                      "name":  "model_edit",
+                      "title":  "Model Edit",
+                      "description":  "Make structural changes or configure parameters in a Simulink, System Composer, or Stateflow model within ONE scope per call. Use model_read first to get block IDs.\n\nOperations (executed in array order):\n- add_block: {op, type, name?, ref?, params?, position?} - Add block or SF element. SL params e.g. {Gain: \"2.0\"}; SF types: State, Junction, Box, Data, Event, Message, StateflowFunction, EMFunction, TruthTable\n- connect: {op, target: \"blk_X.y1 -\u003e blk_Y.u1\", params?} - Wire output to input (y=output port, u=input port); for physical ports use blk_X.portName \u003c-\u003e blk_Y.portName; in SF scope use portless \"#src -\u003e #dst\" or \"? -\u003e #dst\" (default transition); replaces existing connection if destination port occupied; params set signal properties (SL) or LabelString/ExecutionOrder (SF)\n- disconnect: {op, target: \"blk_X.y1 -\u003e blk_Y.u1\"} - Remove connection; in SF scope target is transition sf_X, endpoint pair \"sf_X -\u003e sf_Y\", or default \"? -\u003e sf_X\"\n- configure: {op, target, params} - Set Simulink parameters, System Composer component properties, or SF element properties. Target types: blk_X (block params), sf_X (SF element, e.g. {LabelString: \"...\"}), blk_X.y1 -\u003e blk_Y.u1 (signal props), config:ModelName (solver settings), or chart:ModelName (SF chart-level props, e.g. {ActionLanguage: \"MATLAB\"})\n- delete: {op, target: \"blk_X\"} - Remove block\n- replace_block: {op, target: \"blk_X\", type, ref?, params?} - Replace block with different type; preserves name, position, connections\n- create_subsystem: {op, name, ref?, interface: {inputs, outputs}} - Create subsystem; connect via #ref.yN/#ref.uN (N = port number from interface)\n\nFor parameter-only changes (no structural edits), use configure operations alone.\n\nChaining: Use \"ref\" to name a new block, \"#ref\" to reference it within the same call:\n  [{op: \"add_block\", type: \"Gain\", ref: \"g1\"}, {op: \"connect\", target: \"blk_5.y1 -\u003e #g1.u1\"}]\n\nResponse \"created\" map shows ref → blk_id (or sf_X in SF scope). In subsequent calls, use the returned ID instead of #ref. Use model_query_params to discover valid parameter names. Operations continue on error.\n\nIMPORTANT: The operations parameter MUST be single-line JSON with no newlines.",
+                      "annotations":  {
+                                          "readOnlyHint":  false,
+                                          "destructiveHint":  true,
+                                          "idempotentHint":  false,
+                                          "openWorldHint":  false
+                                      },
+                      "inputSchema":  {
+                                          "type":  "object",
+                                          "properties":  {
+                                                             "model":  {
+                                                                           "type":  "string",
+                                                                           "description":  "Model filename (e.g. MyModel.slx)"
+                                                                       },
+                                                             "scope":  {
+                                                                           "type":  "string",
+                                                                           "description":  "Where to operate: \u0027root\u0027, subsystem block ID \u0027blk_5\u0027, or Stateflow scope \u0027sf_X\u0027 (chart/state/box). Chart blk_X auto-detects as SF. All ops within this scope."
+                                                                       },
+                                                             "operations":  {
+                                                                                "type":  "string",
+                                                                                "description":  "JSON array of operation objects (MUST be single-line, no newlines). Each has \u0027op\u0027 (add_block|connect|disconnect|configure|delete|replace_block|create_subsystem) and operation-specific fields."
+                                                                            },
+                                                             "layout_mode":  {
+                                                                                 "type":  "string",
+                                                                                 "description":  "Layout mode for this call: \u0027full\u0027 (use when scope is empty/building from scratch) or \u0027incremental\u0027 (use when adding to existing model). Always provide this parameter.",
+                                                                                 "enum":  [
+                                                                                              "full",
+                                                                                              "incremental"
+                                                                                          ]
+                                                                             }
+                                                         },
+                                          "required":  [
+                                                           "model",
+                                                           "scope",
+                                                           "operations"
+                                                       ]
+                                      }
+                  },
+                  {
+                      "name":  "model_check",
+                      "title":  "Model Check",
+                      "description":  "Validate a Simulink model for structural issues. Prefer model_context first when deciding what scope to inspect; then run model_check on the narrowest relevant scope after edits or when structural validation is explicitly needed.\n\nValidate a Simulink model for structural issues. Detects unconnected ports, dangling signal lines, and Stateflow edit-time lint errors. Use after model_edit to catch connectivity problems, or to audit an existing model\u0027s structural health.\n\nChecks available:\n- unconnected_ports: blocks with inputs/outputs that have no signal connected\n- unconnected_lines: signal lines missing a source or destination\n- stateflow_lint: edit-time lint diagnostics on Chart and StateTransitionTable blocks\n\nReturns issue list with severity (error/warning), block IDs, and actionable messages. Use scope to focus on a specific subsystem for faster, targeted validation.",
+                      "annotations":  {
+                                          "readOnlyHint":  true,
+                                          "destructiveHint":  false,
+                                          "idempotentHint":  true,
+                                          "openWorldHint":  false
+                                      },
+                      "inputSchema":  {
+                                          "type":  "object",
+                                          "properties":  {
+                                                             "model":  {
+                                                                           "type":  "string",
+                                                                           "description":  "Model filename (e.g. MyModel.slx)"
+                                                                       },
+                                                             "scope":  {
+                                                                           "type":  "string",
+                                                                           "description":  "Validation scope: \u0027root\u0027 for entire model or a block ID like \u0027blk_10\u0027 for a specific subsystem"
+                                                                       },
+                                                             "checks":  {
+                                                                            "type":  "string",
+                                                                            "description":  "JSON array of check names to run: \u0027[\"all\"]\u0027 (default), or selective like \u0027[\"unconnected_ports\", \"unconnected_lines\"]\u0027. Available: unconnected_ports, unconnected_lines, stateflow_lint"
+                                                                        }
+                                                         },
+                                          "required":  [
+                                                           "model",
+                                                           "scope",
+                                                           "checks"
+                                                       ]
+                                      }
+                  },
+                  {
+                      "name":  "model_test",
+                      "title":  "Model Test",
+                      "description":  "Execute behavioral tests against a Simulink model using a Gherkin-format specification file. Auto-creates test artifacts and returns pytest-style results. IMPORTANT: Load the \u0027testing-simulink-models\u0027 skill before writing .feature files — the Gherkin format requires TOML front-matter and custom step syntax not found in standard Gherkin. ROUTING: When a user asks to \u0027generate tests\u0027, \u0027write test cases\u0027, or \u0027verify requirements\u0027 for a Simulink model or subsystem, ALWAYS use this tool with the testing-simulink-models skill — never write matlab.unittest.TestCase classes that reimplement model logic in MATLAB.",
+                      "annotations":  {
+                                          "readOnlyHint":  false,
+                                          "destructiveHint":  false,
+                                          "idempotentHint":  true,
+                                          "openWorldHint":  false
+                                      },
+                      "inputSchema":  {
+                                          "type":  "object",
+                                          "properties":  {
+                                                             "model":  {
+                                                                           "type":  "string",
+                                                                           "description":  "Model filename (e.g. MyModel.slx)"
+                                                                       },
+                                                             "gherkin_file":  {
+                                                                                  "type":  "string",
+                                                                                  "description":  "Path to Gherkin test specification file"
+                                                                              },
+                                                             "scenarios":  {
+                                                                               "type":  "string",
+                                                                               "description":  "JSON array of scenario names to run, e.g. \u0027[\"Scenario1\", \"Scenario2\"]\u0027. Use \u0027[]\u0027 to run all scenarios."
+                                                                           },
+                                                             "verbose":  {
+                                                                             "type":  "string",
+                                                                             "description":  "Include signal traces on failure (\u0027true\u0027 or \u0027false\u0027). Default: false"
+                                                                         },
+                                                             "draft_mode":  {
+                                                                                "type":  "string",
+                                                                                "description":  "Skip main model compile for faster iteration (\u0027true\u0027 or \u0027false\u0027). Use \u0027true\u0027 by default for rapid test development (~3s vs ~60s). If draft mode fails due to type/bus/dimension issues, re-run with \u0027false\u0027. Default: false"
+                                                                            },
+                                                             "coverage":  {
+                                                                              "type":  "string",
+                                                                              "enum":  [
+                                                                                           "none",
+                                                                                           "decision"
+                                                                                       ],
+                                                                              "description":  "Coverage metric to collect: \u0027none\u0027 (default) or \u0027decision\u0027. Requires Simulink Coverage toolbox."
+                                                                          }
+                                                         },
+                                          "required":  [
+                                                           "model",
+                                                           "gherkin_file",
+                                                           "scenarios",
+                                                           "verbose",
+                                                           "draft_mode",
+                                                           "coverage"
+                                                       ]
+                                      }
+                  },
+                  {
+                      "name":  "model_context",
+                      "title":  "Model Context",
+                      "description":  "FIRST-CHOICE structural context for Simulink engineering tasks. The first call builds one complete compile-free model snapshot; later calls resolve scopes and return compact context from that snapshot without loading the model. Use targeted model_read calls when exact algorithmic expressions or current edit identifiers are required.",
+                      "annotations":  {
+                                          "readOnlyHint":  true,
+                                          "destructiveHint":  false,
+                                          "idempotentHint":  true,
+                                          "openWorldHint":  false
+                                      },
+                      "inputSchema":  {
+                                          "type":  "object",
+                                          "properties":  {
+                                                             "task":  {
+                                                                          "type":  "string",
+                                                                          "description":  "Natural-language engineering task or question"
+                                                                      },
+                                                             "model":  {
+                                                                           "type":  "string",
+                                                                           "description":  "Model filename/path or auto",
+                                                                           "default":  "auto"
+                                                                       },
+                                                             "scope":  {
+                                                                           "type":  "string",
+                                                                           "description":  "root, auto, or Simulink block/subsystem path",
+                                                                           "default":  "auto"
+                                                                       },
+                                                             "cachePolicy":  {
+                                                                                 "type":  "string",
+                                                                                 "enum":  [
+                                                                                              "use-if-fresh",
+                                                                                              "cache-only",
+                                                                                              "force-refresh"
+                                                                                          ],
+                                                                                 "default":  "use-if-fresh"
+                                                                             }
+                                                         },
+                                          "required":  [
+                                                           "task"
+                                                       ]
+                                      }
+                  },
+                  {
+                      "name":  "model_cache_invalidate",
+                      "title":  "Model Cache Invalidate",
+                      "description":  "Remove the complete structural snapshot for a model. Use once after an edit batch, or immediately after a partial edit before requesting new cached context.",
+                      "annotations":  {
+                                          "readOnlyHint":  false,
+                                          "destructiveHint":  false,
+                                          "idempotentHint":  true,
+                                          "openWorldHint":  false
+                                      },
+                      "inputSchema":  {
+                                          "type":  "object",
+                                          "properties":  {
+                                                             "model":  {
+                                                                           "type":  "string",
+                                                                           "description":  "Model filename/path or loaded model name"
+                                                                       }
+                                                         },
+                                          "required":  [
+                                                           "model"
+                                                       ]
+                                      }
+                  },
+                  {
+                      "name":  "model_project_inventory",
+                      "title":  "Model Project Inventory",
+                      "description":  "Discover Simulink models, libraries, dictionaries, external harness models, Simulink Test Manager files, feature files, and MATLAB scripts in a repository.",
+                      "annotations":  {
+                                          "readOnlyHint":  true,
+                                          "destructiveHint":  false,
+                                          "idempotentHint":  true,
+                                          "openWorldHint":  false
+                                      },
+                      "inputSchema":  {
+                                          "type":  "object",
+                                          "properties":  {
+                                                             "repo":  {
+                                                                          "type":  "string",
+                                                                          "description":  "Project or repository root path",
+                                                                          "default":  "auto"
+                                                                      }
+                                                         },
+                                          "required":  [
+
+                                                       ]
+                                      }
+                  },
+                  {
+                      "name":  "model_test_manager_list",
+                      "title":  "Model Test Manager List",
+                      "description":  "Inspect an existing Simulink Test Manager .mldatx file. Lists suites, test cases, harness mappings, stop times, modes, assessments, baselines, and iteration counts.",
+                      "annotations":  {
+                                          "readOnlyHint":  true,
+                                          "destructiveHint":  false,
+                                          "idempotentHint":  true,
+                                          "openWorldHint":  false
+                                      },
+                      "inputSchema":  {
+                                          "type":  "object",
+                                          "properties":  {
+                                                             "test_file":  {
+                                                                               "type":  "string",
+                                                                               "description":  "Path to .mldatx test file"
+                                                                           }
+                                                         },
+                                          "required":  [
+                                                           "test_file"
+                                                       ]
+                                      }
+                  },
+                  {
+                      "name":  "model_test_manager_run",
+                      "title":  "Model Test Manager Run",
+                      "description":  "Run selected or all tests from an existing Simulink Test Manager .mldatx file and return the result summary plus optional JUnit/PDF artifact paths.",
+                      "annotations":  {
+                                          "readOnlyHint":  false,
+                                          "destructiveHint":  false,
+                                          "idempotentHint":  true,
+                                          "openWorldHint":  false
+                                      },
+                      "inputSchema":  {
+                                          "type":  "object",
+                                          "properties":  {
+                                                             "test_file":  {
+                                                                               "type":  "string",
+                                                                               "description":  "Path to .mldatx test file"
+                                                                           },
+                                                             "tests":  {
+                                                                           "type":  "string",
+                                                                           "description":  "JSON array of selected full/partial test names; [] runs all",
+                                                                           "default":  "[]"
+                                                                       },
+                                                             "parallel":  {
+                                                                              "type":  "string",
+                                                                              "description":  "true/false",
+                                                                              "default":  "false"
+                                                                          },
+                                                             "report":  {
+                                                                            "type":  "string",
+                                                                            "description":  "JSON object: {\"output_dir\":\"...\",\"junit\":true,\"pdf\":false}",
+                                                                            "default":  "{}"
+                                                                        }
+                                                         },
+                                          "required":  [
+                                                           "test_file"
+                                                       ]
+                                      }
+                  }
+              ],
+    "signatures":  {
+                       "model_overview":  {
+                                              "function":  "model_overview",
+                                              "input":  {
+                                                            "order":  [
+                                                                          "model",
+                                                                          "scope",
+                                                                          "detail"
+                                                                      ]
+                                                        }
+                                          },
+                       "model_read":  {
+                                          "function":  "model_read",
+                                          "input":  {
+                                                        "order":  [
+                                                                      "model",
+                                                                      "scope",
+                                                                      "depth"
+                                                                  ]
+                                                    }
+                                      },
+                       "model_query_params":  {
+                                                  "function":  "model_query_params",
+                                                  "input":  {
+                                                                "order":  [
+                                                                              "model",
+                                                                              "targets",
+                                                                              "params",
+                                                                              "compile"
+                                                                          ]
+                                                            }
+                                              },
+                       "model_resolve_params":  {
+                                                    "function":  "model_resolve_params",
+                                                    "input":  {
+                                                                  "order":  [
+                                                                                "model",
+                                                                                "expressions"
+                                                                            ]
+                                                              }
+                                                },
+                       "model_edit":  {
+                                          "function":  "model_edit",
+                                          "input":  {
+                                                        "order":  [
+                                                                      "model",
+                                                                      "scope",
+                                                                      "operations",
+                                                                      "layout_mode"
+                                                                  ]
+                                                    }
+                                      },
+                       "model_check":  {
+                                           "function":  "model_check",
+                                           "input":  {
+                                                         "order":  [
+                                                                       "model",
+                                                                       "scope",
+                                                                       "checks"
+                                                                   ]
+                                                     }
+                                       },
+                       "model_test":  {
+                                          "function":  "model_test",
+                                          "input":  {
+                                                        "order":  [
+                                                                      "model",
+                                                                      "gherkin_file",
+                                                                      "scenarios",
+                                                                      "verbose",
+                                                                      "draft_mode",
+                                                                      "coverage"
+                                                                  ]
+                                                    }
+                                      },
+                       "model_context":  {
+                                             "function":  "model_context",
+                                             "input":  {
+                                                           "order":  [
+                                                                         "task",
+                                                                         "model",
+                                                                         "scope",
+                                                                         "cachePolicy"
+                                                                     ]
+                                                       }
+                                         },
+                       "model_cache_invalidate":  {
+                                                      "function":  "model_cache_invalidate",
+                                                      "input":  {
+                                                                    "order":  [
+                                                                                  "model"
+                                                                              ]
+                                                                }
+                                                  },
+                       "model_project_inventory":  {
+                                                       "function":  "model_project_inventory",
+                                                       "input":  {
+                                                                     "order":  [
+                                                                                   "repo"
+                                                                               ]
+                                                                 }
+                                                   },
+                       "model_test_manager_list":  {
+                                                       "function":  "model_test_manager_list",
+                                                       "input":  {
+                                                                     "order":  [
+                                                                                   "test_file"
+                                                                               ]
+                                                                 }
+                                                   },
+                       "model_test_manager_run":  {
+                                                      "function":  "model_test_manager_run",
+                                                      "input":  {
+                                                                    "order":  [
+                                                                                  "test_file",
+                                                                                  "tests",
+                                                                                  "parallel",
+                                                                                  "report"
+                                                                              ]
+                                                                }
+                                                  }
+                   }
 }

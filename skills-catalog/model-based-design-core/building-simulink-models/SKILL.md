@@ -4,7 +4,7 @@ description: Builds and edits Simulink, System Composer, Stateflow, and Simscape
 license: MathWorks BSD-3-Clause
 metadata:
   author: MathWorks
-  version: "1.3"
+  version: "1.4"
 ---
 
 # Building Models
@@ -41,15 +41,15 @@ No model reading, planning, or editing begins until all three gates pass.
 
 0. **Ensure Library & Policy Prerequisites:** Read `.satk/reuse-libraries.json`, `.satk/block-policy.json`, and `.satk/library-kg/index.md`. If all three exist, proceed. If `reuse-libraries.json` has `confirmedNone: true`, skip policy and KG checks. If any are missing, check the gates in the "Library & Policy Prerequisites — BLOCKING GATE" section above. load `setup-custom-libraries`skill for gate resolution details and do not proceed until it is complete.
 1. **Library block lookup:** If `.satk/reuse-libraries.json` declares one or more libraries, list every block type you plan to use, search `.satk/library-kg/index.md` and the relevant category pages to find each of the library blocks that match.
-2. **Get cache-aware working context first:** For edits/debugging in an existing model, call `model_context` before broad `model_overview`/`model_read`. Use `model="auto"` and `scope="auto"` when the user describes the target in natural language. Keep `budget="cheap"` unless the user explicitly asks for deep analysis. This returns compact cached context, candidate scopes, interfaces/connections, and suggested next tool calls without full recursive analysis or compile.
+2. **Get cache-aware working context first:** For edits/debugging in an existing model, call `model_context` before broad `model_overview`/`model_read`. Use `model="auto"` and `scope="auto"` when the user describes the target in natural language. The first call builds one complete compile-free structural snapshot; later calls return compact context from it without loading the model.
 3. **Targeted read only if needed:** Use `model_read` on the resolved target scope when you specifically need block IDs, SATK algorithmic expressions, or deeper topology not already present in `model_context`.
 4. **Plan the data flow:** For complex edits, sketch inputs → operations → outputs, then map to blocks identified in Step 1–3.
 5. **Edit:** Use `model_edit` with operations scoped to one subsystem level at a time.
-6. **Invalidate edited-scope cache:** After a successful or partial `model_edit`, call `model_cache_invalidate` for the edited scope. This keeps future `model_context` calls cache-first but prevents stale topology/interface context.
+6. **Invalidate after the edit batch:** After the final successful `model_edit` in a batch, call `model_cache_invalidate` for the model. The next `model_context` call rebuilds the complete structural snapshot. If an edit is partial, invalidate immediately before reading or checking the model.
 7. **Verify:** Use `model_context` or scoped `model_read` on the edited scope to confirm the structure matches your intent.
 8. **Check connectivity:** After all edits in a scope are complete, run `model_check` on the narrowest relevant scope to catch unconnected ports or dangling lines. Fix any `error`-severity issues.
 
-**If `model_edit` returns `status: partial`:** Call `model_cache_invalidate` for the edited scope, then run `model_context` or scoped `model_read`, then `model_check` immediately — don't wait until all edits are complete.
+**If `model_edit` returns `status: partial`:** Call `model_cache_invalidate` for the model, then run `model_context` or scoped `model_read`, then `model_check` immediately — don't wait until all edits are complete.
 
 ## Operation Chaining with `ref`
 

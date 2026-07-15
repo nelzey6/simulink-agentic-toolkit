@@ -53,24 +53,6 @@ The Simulink Agentic Toolkit works with any AI coding agent that supports skills
 | [Sourcegraph Amp](https://ampcode.com/) | Automated |
 
 
-## Cache-aware fork setup
-
-This fork includes an experimental cache-aware Simulink context layer. To install this fork for local Pi/MCP use, run in MATLAB:
-
-```matlab
-addpath("<path-to-this-fork>")
-setupCacheAwareSATK("install")
-```
-
-By default this configures all supported local agent MCP config locations on a best-effort basis (`Agent="all"`): Pi, Claude Code, Gemini CLI, Amp, and VS Code/Copilot. It points each MCP configuration at this fork's `tools/tools.json`, initializes SATK, and verifies that `model_context` plus the model project/Test Manager workflow tools are available. `model_context` is the first-choice cache-aware read planner: it uses cached model/project knowledge for orientation, refreshes shallow scoped summaries when needed, and recommends targeted reads instead of broad deep reads. Existing MCP config files are backed up before being modified.
-
-To configure only one agent, pass for example:
-
-```matlab
-setupCacheAwareSATK("install", "Agent", "claude")
-setupCacheAwareSATK("install", "Agent", "pi")
-```
-
 ## Get Started with the Simulink Agentic Toolkit
 
 These steps show you how to use the Simulink Agentic Toolkit to install the MATLAB MCP Server and add skills to your agent.
@@ -203,9 +185,10 @@ After you install the Simulink Agentic Toolkit, your agent can use the following
 | `model_test` | Verify requirements. Run human-readable Gherkin tests with automatic harness generation *(requires Simulink Test)* |
 | `model_query_params` | Inspect any parameter. Query block settings, signal properties, solver config, and logging flags |
 | `model_resolve_params` | Get actual values. Resolve workspace variables like `Kp` to their numeric values across all scopes |
-| `model_project_setup`, `model_project_inventory` | Prepare and inventory OA/Simulink projects with models, libraries, dictionaries, harnesses, and test files |
-| `model_harness_*` | List, create, open, save, and close Simulink Test harnesses so harness editing fits the model-edit workflow |
-| `model_test_manager_*` | Inspect, author, configure, run, and summarize native Simulink Test Manager `.mldatx` tests |
+| `model_context` | Build one complete compile-free structural snapshot on first use, then return compact cached context for later tasks |
+| `model_cache_invalidate` | Remove a model snapshot after an edit batch so the next context call rebuilds it |
+| `model_project_inventory` | Discover models, libraries, dictionaries, external harness models, and Test Manager files |
+| `model_test_manager_list`, `model_test_manager_run` | Inspect and execute existing native Simulink Test Manager `.mldatx` tests |
 
 
 ---

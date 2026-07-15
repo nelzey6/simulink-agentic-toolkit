@@ -1,15 +1,7 @@
-function out = model_project_inventory(repo, cachePolicy)
+function out = model_project_inventory(repo)
 %MODEL_PROJECT_INVENTORY Discover models, libraries, dictionaries, harnesses, and test files.
 if nargin < 1 || strlength(string(repo)) == 0, repo = 'auto'; end
-if nargin < 2 || strlength(string(cachePolicy)) == 0, cachePolicy = 'use-if-fresh'; end
 repo = satkproject.resolveProjectRoot(repo);
-fingerprint = inventoryFingerprint(repo);
-cp = satkproject.cachePath(repo, 'inventory', 'model_project_inventory');
-[hit, payload] = satkproject.cacheRead(cp, fingerprint, cachePolicy);
-if hit, out = payload; out.cache = cacheInfo('hit', cp, cachePolicy); return; end
-if strcmp(char(cachePolicy), 'cache-only')
-    error('model_project_inventory:CacheMiss', 'No fresh model project inventory cache at %s', cp);
-end
 allSlx = satkproject.findFiles(repo, {'*.slx'});
 models = allSlx(~contains(allSlx, [filesep 'libs' filesep]) & ~contains(allSlx, [filesep 'unit_tests' filesep 'test_harness' filesep]));
 libraries = allSlx(contains(allSlx, [filesep 'libs' filesep]));
@@ -31,23 +23,4 @@ out.feature_files = satkproject.listToStructArray(features, 'path');
 out.matlab_scripts = satkproject.listToStructArray(scripts, 'path');
 out.counts = struct('models', numel(models), 'libraries', numel(libraries), 'harnesses', numel(harnesses), ...
     'dictionaries', numel(dicts), 'test_manager_files', numel(testFiles), 'feature_files', numel(features), 'matlab_scripts', numel(scripts));
-out.cache = cacheInfo('miss', cp, cachePolicy);
-satkproject.cacheWrite(cp, fingerprint, rmfield(out,'cache'), cachePolicy);
-end
-
-function fp = inventoryFingerprint(repo)
-fp = struct();
-fp.repo = repo;
-fp.gitHead = '';
-try
-    [status, txt] = system(sprintf('git -C "%s" rev-parse HEAD', repo));
-    if status == 0, fp.gitHead = strtrim(txt); end
-catch
-end
-fp.startupHash = satkproject.fileHash(fullfile(repo, 'matlab', 'startup.m'));
-fp.toolsHash = satkproject.fileHash(fullfile(repo, 'tools.json'));
-end
-
-function c = cacheInfo(status, path, policy)
-c = struct('status', status, 'path', path, 'policy', char(string(policy)));
 end
