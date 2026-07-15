@@ -403,7 +403,7 @@
     {
       "name": "model_context",
       "title": "Model Context",
-      "description": "FIRST-CHOICE tool for cache-aware Simulink working context. Use this before model_overview/model_read for engineering tasks, feature changes, debugging, or when first encountering a model. It resolves model/scope when set to auto, uses cached project/model/block context, avoids full recursive analysis and compile by default, and returns compact relevant context plus suggested next tool calls.",
+      "description": "FIRST-CHOICE cache-aware Simulink working context and read planner. Use before model_read/model_overview for engineering tasks. It checks fresh project/model cache first, refreshes only shallow scoped summaries by default, recommends targeted model_read calls when exact block IDs/ports are needed, and avoids broad deep reads unless explicitly justified.\n\nFIRST-CHOICE tool for cache-aware Simulink working context. Use this before model_overview/model_read for engineering tasks, feature changes, debugging, or when first encountering a model. It resolves model/scope when set to auto, uses cached project/model/block context, avoids full recursive analysis and compile by default, and returns compact relevant context plus suggested next tool calls.",
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
@@ -443,9 +443,7 @@
         "required": [
           "task",
           "model",
-          "scope",
-          "budget",
-          "cachePolicy"
+          "scope"
         ]
       }
     },

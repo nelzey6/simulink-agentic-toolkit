@@ -62,7 +62,7 @@ addpath("<path-to-this-fork>")
 setupCacheAwareSATK("install")
 ```
 
-By default this configures all supported local agent MCP config locations on a best-effort basis (`Agent="all"`): Pi, Claude Code, Gemini CLI, Amp, and VS Code/Copilot. It points each MCP configuration at this fork's `tools/tools.json`, initializes SATK, and verifies that `model_context` plus the model project/Test Manager workflow tools are available. Existing MCP config files are backed up before being modified.
+By default this configures all supported local agent MCP config locations on a best-effort basis (`Agent="all"`): Pi, Claude Code, Gemini CLI, Amp, and VS Code/Copilot. It points each MCP configuration at this fork's `tools/tools.json`, initializes SATK, and verifies that `model_context` plus the model project/Test Manager workflow tools are available. `model_context` is the first-choice cache-aware read planner: it uses cached model/project knowledge for orientation, refreshes shallow scoped summaries when needed, and recommends targeted reads instead of broad deep reads. Existing MCP config files are backed up before being modified.
 
 To configure only one agent, pass for example:
 
