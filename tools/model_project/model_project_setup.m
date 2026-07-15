@@ -1,9 +1,9 @@
-function out = repo_setup(repo, startup, toolkit_root)
-%REPO_SETUP Prepare MATLAB for an OA/SATK Simulink repository workflow.
+function out = model_project_setup(repo, startup, toolkit_root)
+%MODEL_PROJECT_SETUP Prepare MATLAB for an OA/SATK Simulink repository workflow.
 if nargin < 1 || strlength(string(repo)) == 0, repo = 'auto'; end
 if nargin < 2 || strlength(string(startup)) == 0, startup = 'matlab/startup.m'; end
 if nargin < 3, toolkit_root = ''; end
-repo = satkrepo.resolveRepoRoot(repo);
+repo = satkproject.resolveProjectRoot(repo);
 startup = char(string(startup));
 if ~isempty(toolkit_root) && strlength(string(toolkit_root)) > 0 && isfolder(toolkit_root)
     addpath(char(string(toolkit_root)));
@@ -22,7 +22,7 @@ if ~isfile(startupPath)
     startupPath = fullfile(repo, startup);
 end
 if ~isfile(startupPath)
-    error('repo_setup:StartupNotFound', 'Startup file not found: %s', startup);
+    error('model_project_setup:StartupNotFound', 'Startup file not found: %s', startup);
 end
 startupDir = fileparts(startupPath);
 cd(startupDir);
@@ -33,7 +33,7 @@ catch ME
     startupStatus = 'error';
     startupError = ME.message;
 end
-inv = repo_inventory(repo, 'force-refresh');
+inv = model_project_inventory(repo, 'force-refresh');
 out = struct();
 out.status = startupStatus;
 out.repo = repo;
@@ -41,7 +41,7 @@ out.cwd = pwd;
 out.startup = startupPath;
 out.matlab_release = version('-release');
 out.simulink_available = license('test','Simulink');
-out.simulink_test_available = satkrepo.toolboxAvailable('Simulink Test');
+out.simulink_test_available = satkproject.toolboxAvailable('Simulink Test');
 out.tool_paths = struct('model_read', which('model_read'), 'model_edit', which('model_edit'), ...
     'model_check', which('model_check'), 'model_test', which('model_test'));
 out.inventory = inv;

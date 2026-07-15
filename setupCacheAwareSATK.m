@@ -30,7 +30,9 @@ repoRoot = fileparts(mfilename('fullpath'));
 toolsFile = fullfile(repoRoot, 'tools', 'tools.json');
 addpath(repoRoot);
 addpath(genpath(fullfile(repoRoot, 'tools', 'model_cache')));
-addpath(genpath(fullfile(repoRoot, 'tools', 'repo_workflow')));
+addpath(genpath(fullfile(repoRoot, 'tools', 'model_project')));
+addpath(genpath(fullfile(repoRoot, 'tools', 'model_harness')));
+addpath(genpath(fullfile(repoRoot, 'tools', 'model_test_manager')));
 
 switch lower(action)
     case "install"
@@ -182,13 +184,13 @@ result.toolsFile = toolsFile;
 result.toolsFileExists = isfile(toolsFile);
 result.modelContext = which('model_context');
 result.cacheInvalidate = which('model_cache_invalidate');
-result.repoInventory = which('repo_inventory');
-result.testManagerList = which('test_manager_list');
+result.projectInventory = which('model_project_inventory');
+result.testManagerList = which('model_test_manager_list');
 result.satkInitialize = which('satk_initialize');
 result.agent = opts.Agent;
 result.configuredConfigs = configured;
 result.ok = result.toolsFileExists && ~isempty(result.modelContext) && ~isempty(result.cacheInvalidate) && ...
-    ~isempty(result.repoInventory) && ~isempty(result.testManagerList);
+    ~isempty(result.projectInventory) && ~isempty(result.testManagerList);
 end
 
 function printResult(result)
@@ -198,7 +200,7 @@ fprintf('Repo root:      %s\n', result.repoRoot);
 fprintf('Tools file:     %s\n', result.toolsFile);
 fprintf('model_context:  %s\n', result.modelContext);
 fprintf('invalidate:     %s\n', result.cacheInvalidate);
-fprintf('repo_inventory: %s\n', result.repoInventory);
+fprintf('model_project_inventory: %s\n', result.projectInventory);
 fprintf('tm_list:        %s\n', result.testManagerList);
 fprintf('satk_init:      %s\n', result.satkInitialize);
 fprintf('Agent:          %s\n', result.agent);

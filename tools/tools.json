@@ -478,8 +478,8 @@
       }
     },
     {
-      "name": "repo_setup",
-      "title": "Repo Setup",
+      "name": "model_project_setup",
+      "title": "Model Project Setup",
       "description": "Prepare MATLAB/SATK and run a repository startup script for OA/Simulink workflows. Returns setup status, tool availability, and repo inventory.",
       "annotations": {
         "readOnlyHint": false,
@@ -511,8 +511,8 @@
       }
     },
     {
-      "name": "repo_inventory",
-      "title": "Repo Inventory",
+      "name": "model_project_inventory",
+      "title": "Model Project Inventory",
       "description": "Cache-aware discovery of Simulink models, libraries, dictionaries, harnesses, Simulink Test Manager files, feature files, and MATLAB scripts in a repo.",
       "annotations": {
         "readOnlyHint": true,
@@ -546,8 +546,8 @@
       }
     },
     {
-      "name": "harness_list",
-      "title": "Harness List",
+      "name": "model_harness_list",
+      "title": "Model Harness List",
       "description": "Cache-aware list of Simulink Test harnesses for a model or component using sltest.harness.find.",
       "annotations": {
         "readOnlyHint": true,
@@ -591,9 +591,9 @@
       }
     },
     {
-      "name": "harness_create",
-      "title": "Harness Create",
-      "description": "Create a Simulink Test harness using sltest.harness.create. After creation, use harness_open and model_read/model_edit to edit harness contents.",
+      "name": "model_harness_create",
+      "title": "Model Harness Create",
+      "description": "Create a Simulink Test harness using sltest.harness.create. After creation, use model_harness_open and model_read/model_edit to edit harness contents.",
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": true,
@@ -649,8 +649,8 @@
       }
     },
     {
-      "name": "harness_open",
-      "title": "Harness Open",
+      "name": "model_harness_open",
+      "title": "Model Harness Open",
       "description": "Open an existing Simulink Test harness for editing. Then use model_read/model_edit on the opened harness model.",
       "annotations": {
         "readOnlyHint": false,
@@ -682,8 +682,8 @@
       }
     },
     {
-      "name": "harness_save",
-      "title": "Harness Save",
+      "name": "model_harness_save",
+      "title": "Model Harness Save",
       "description": "Save an open Simulink Test harness.",
       "annotations": {
         "readOnlyHint": false,
@@ -715,8 +715,8 @@
       }
     },
     {
-      "name": "harness_close",
-      "title": "Harness Close",
+      "name": "model_harness_close",
+      "title": "Model Harness Close",
       "description": "Close an open Simulink Test harness, optionally saving first.",
       "annotations": {
         "readOnlyHint": false,
@@ -753,8 +753,8 @@
       }
     },
     {
-      "name": "test_manager_list",
-      "title": "Test Manager List",
+      "name": "model_test_manager_list",
+      "title": "Model Test Manager List",
       "description": "Cache-aware inspection of a Simulink Test Manager .mldatx file. Lists suites, test cases, harness mappings, stop times, modes, assessments, baselines, and iteration counts.",
       "annotations": {
         "readOnlyHint": true,
@@ -788,8 +788,8 @@
       }
     },
     {
-      "name": "test_manager_create_case",
-      "title": "Test Manager Create Case",
+      "name": "model_test_manager_create_case",
+      "title": "Model Test Manager Create Case",
       "description": "Create a native Simulink Test Manager test case in an existing .mldatx file, optionally assigning model/component/harness and stop time.",
       "annotations": {
         "readOnlyHint": false,
@@ -846,8 +846,8 @@
       }
     },
     {
-      "name": "test_manager_configure_case",
-      "title": "Test Manager Configure Case",
+      "name": "model_test_manager_configure_case",
+      "title": "Model Test Manager Configure Case",
       "description": "Configure a native Simulink Test Manager test case. The config JSON object supports enabled, model, harness, harness_owner, stop_time, start_time, simulation_mode, callbacks, and arbitrary setProperty values.",
       "annotations": {
         "readOnlyHint": false,
@@ -884,8 +884,8 @@
       }
     },
     {
-      "name": "test_manager_run",
-      "title": "Test Manager Run",
+      "name": "model_test_manager_run",
+      "title": "Model Test Manager Run",
       "description": "Run selected or full native Simulink Test Manager tests. Default runner uses MATLAB unittest testsuite(.mldatx) for repo/CI compatibility and can emit JUnit/PDF artifacts.",
       "annotations": {
         "readOnlyHint": false,
@@ -927,8 +927,8 @@
       }
     },
     {
-      "name": "test_manager_results",
-      "title": "Test Manager Results",
+      "name": "model_test_manager_results",
+      "title": "Model Test Manager Results",
       "description": "Cache-aware summary of JUnit XML test results or latest Simulink Test Manager result sets.",
       "annotations": {
         "readOnlyHint": true,

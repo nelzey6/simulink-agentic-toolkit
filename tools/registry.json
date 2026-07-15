@@ -496,10 +496,10 @@
       "matlab_release": ">=R2023a",
       "matlab_function": "model_cache_invalidate"
     },
-    "repo_setup": {
+    "model_project_setup": {
       "matlab_release": ">=R2023a",
-      "matlab_function": "repo_setup",
-      "title": "Repo Setup",
+      "matlab_function": "model_project_setup",
+      "title": "Model Project Setup",
       "description": "Prepare MATLAB/SATK and run a repository startup script for OA/Simulink workflows. Returns setup status, tool availability, and repo inventory.",
       "annotations": {
         "readOnlyHint": false,
@@ -530,10 +530,10 @@
         ]
       }
     },
-    "repo_inventory": {
+    "model_project_inventory": {
       "matlab_release": ">=R2023a",
-      "matlab_function": "repo_inventory",
-      "title": "Repo Inventory",
+      "matlab_function": "model_project_inventory",
+      "title": "Model Project Inventory",
       "description": "Cache-aware discovery of Simulink models, libraries, dictionaries, harnesses, Simulink Test Manager files, feature files, and MATLAB scripts in a repo.",
       "annotations": {
         "readOnlyHint": true,
@@ -566,10 +566,10 @@
         ]
       }
     },
-    "harness_list": {
+    "model_harness_list": {
       "matlab_release": ">=R2023a",
-      "matlab_function": "harness_list",
-      "title": "Harness List",
+      "matlab_function": "model_harness_list",
+      "title": "Model Harness List",
       "description": "Cache-aware list of Simulink Test harnesses for a model or component using sltest.harness.find.",
       "annotations": {
         "readOnlyHint": true,
@@ -612,11 +612,11 @@
         ]
       }
     },
-    "harness_create": {
+    "model_harness_create": {
       "matlab_release": ">=R2023a",
-      "matlab_function": "harness_create",
-      "title": "Harness Create",
-      "description": "Create a Simulink Test harness using sltest.harness.create. After creation, use harness_open and model_read/model_edit to edit harness contents.",
+      "matlab_function": "model_harness_create",
+      "title": "Model Harness Create",
+      "description": "Create a Simulink Test harness using sltest.harness.create. After creation, use model_harness_open and model_read/model_edit to edit harness contents.",
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": true,
@@ -671,10 +671,10 @@
         ]
       }
     },
-    "harness_open": {
+    "model_harness_open": {
       "matlab_release": ">=R2023a",
-      "matlab_function": "harness_open",
-      "title": "Harness Open",
+      "matlab_function": "model_harness_open",
+      "title": "Model Harness Open",
       "description": "Open an existing Simulink Test harness for editing. Then use model_read/model_edit on the opened harness model.",
       "annotations": {
         "readOnlyHint": false,
@@ -705,10 +705,10 @@
         ]
       }
     },
-    "harness_save": {
+    "model_harness_save": {
       "matlab_release": ">=R2023a",
-      "matlab_function": "harness_save",
-      "title": "Harness Save",
+      "matlab_function": "model_harness_save",
+      "title": "Model Harness Save",
       "description": "Save an open Simulink Test harness.",
       "annotations": {
         "readOnlyHint": false,
@@ -739,10 +739,10 @@
         ]
       }
     },
-    "harness_close": {
+    "model_harness_close": {
       "matlab_release": ">=R2023a",
-      "matlab_function": "harness_close",
-      "title": "Harness Close",
+      "matlab_function": "model_harness_close",
+      "title": "Model Harness Close",
       "description": "Close an open Simulink Test harness, optionally saving first.",
       "annotations": {
         "readOnlyHint": false,
@@ -778,10 +778,10 @@
         ]
       }
     },
-    "test_manager_list": {
+    "model_test_manager_list": {
       "matlab_release": ">=R2023a",
-      "matlab_function": "test_manager_list",
-      "title": "Test Manager List",
+      "matlab_function": "model_test_manager_list",
+      "title": "Model Test Manager List",
       "description": "Cache-aware inspection of a Simulink Test Manager .mldatx file. Lists suites, test cases, harness mappings, stop times, modes, assessments, baselines, and iteration counts.",
       "annotations": {
         "readOnlyHint": true,
@@ -814,10 +814,10 @@
         ]
       }
     },
-    "test_manager_create_case": {
+    "model_test_manager_create_case": {
       "matlab_release": ">=R2023a",
-      "matlab_function": "test_manager_create_case",
-      "title": "Test Manager Create Case",
+      "matlab_function": "model_test_manager_create_case",
+      "title": "Model Test Manager Create Case",
       "description": "Create a native Simulink Test Manager test case in an existing .mldatx file, optionally assigning model/component/harness and stop time.",
       "annotations": {
         "readOnlyHint": false,
@@ -873,10 +873,10 @@
         ]
       }
     },
-    "test_manager_configure_case": {
+    "model_test_manager_configure_case": {
       "matlab_release": ">=R2023a",
-      "matlab_function": "test_manager_configure_case",
-      "title": "Test Manager Configure Case",
+      "matlab_function": "model_test_manager_configure_case",
+      "title": "Model Test Manager Configure Case",
       "description": "Configure a native Simulink Test Manager test case. The config JSON object supports enabled, model, harness, harness_owner, stop_time, start_time, simulation_mode, callbacks, and arbitrary setProperty values.",
       "annotations": {
         "readOnlyHint": false,
@@ -912,10 +912,10 @@
         ]
       }
     },
-    "test_manager_run": {
+    "model_test_manager_run": {
       "matlab_release": ">=R2023a",
-      "matlab_function": "test_manager_run",
-      "title": "Test Manager Run",
+      "matlab_function": "model_test_manager_run",
+      "title": "Model Test Manager Run",
       "description": "Run selected or full native Simulink Test Manager tests. Default runner uses MATLAB unittest testsuite(.mldatx) for repo/CI compatibility and can emit JUnit/PDF artifacts.",
       "annotations": {
         "readOnlyHint": false,
@@ -956,10 +956,10 @@
         ]
       }
     },
-    "test_manager_results": {
+    "model_test_manager_results": {
       "matlab_release": ">=R2023a",
-      "matlab_function": "test_manager_results",
-      "title": "Test Manager Results",
+      "matlab_function": "model_test_manager_results",
+      "title": "Model Test Manager Results",
       "description": "Cache-aware summary of JUnit XML test results or latest Simulink Test Manager result sets.",
       "annotations": {
         "readOnlyHint": true,

@@ -1,5 +1,5 @@
-function out = harness_list(model, component, searchDepth, cachePolicy)
-%HARNESS_LIST List Simulink Test harnesses for a model/component.
+function out = model_harness_list(model, component, searchDepth, cachePolicy)
+%MODEL_HARNESS_LIST List Simulink Test harnesses for a model/component.
 if nargin < 2 || strlength(string(component)) == 0, component = 'auto'; end
 if nargin < 3 || strlength(string(searchDepth)) == 0, searchDepth = 'all'; end
 if nargin < 4 || strlength(string(cachePolicy)) == 0, cachePolicy = 'use-if-fresh'; end
@@ -13,10 +13,10 @@ end
 ensureLoaded(model);
 fingerprint = struct('model', model, 'owner', owner, 'modelHash', modelHash(model), 'searchDepth', char(string(searchDepth)));
 repo = localRoot(model);
-cp = satkrepo.cachePath(repo, 'harness', ['harness_list_' regexprep(owner,'[^A-Za-z0-9_.-]','_')]);
-[hit, payload] = satkrepo.cacheRead(cp, fingerprint, cachePolicy);
+cp = satkproject.cachePath(repo, 'harness', ['model_harness_list_' regexprep(owner,'[^A-Za-z0-9_.-]','_')]);
+[hit, payload] = satkproject.cacheRead(cp, fingerprint, cachePolicy);
 if hit, out = payload; out.cache = cacheInfo('hit', cp, cachePolicy); return; end
-if strcmp(char(cachePolicy), 'cache-only'), error('harness_list:CacheMiss','No fresh harness list cache.'); end
+if strcmp(char(cachePolicy), 'cache-only'), error('model_harness_list:CacheMiss','No fresh harness list cache.'); end
 try
     if strcmpi(char(string(searchDepth)), 'all')
         h = sltest.harness.find(owner);
@@ -24,17 +24,17 @@ try
         h = sltest.harness.find(owner, 'SearchDepth', str2double(searchDepth));
     end
 catch ME
-    error('harness_list:FindFailed', 'Failed to list harnesses for %s: %s', owner, ME.message);
+    error('model_harness_list:FindFailed', 'Failed to list harnesses for %s: %s', owner, ME.message);
 end
 items = cell(0,1);
 for i = 1:numel(h)
-    item = satkrepo.structify(h(i));
+    item = satkproject.structify(h(i));
     item = normalizeHarnessItem(item);
     items{end+1,1} = item; %#ok<AGROW>
 end
 out = struct('status','ok','model',model,'component',owner,'count',numel(items),'harnesses',{items});
 out.cache = cacheInfo('miss', cp, cachePolicy);
-satkrepo.cacheWrite(cp, fingerprint, rmfield(out,'cache'), cachePolicy);
+satkproject.cacheWrite(cp, fingerprint, rmfield(out,'cache'), cachePolicy);
 end
 
 function item = normalizeHarnessItem(item)
@@ -60,7 +60,7 @@ end
 function h = modelHash(model)
 [~, name, ext] = fileparts(model); if isempty(ext), ext = '.slx'; end
 p = which([name ext]); if isempty(p) && isfile(model), p = model; end
-h = satkrepo.fileHash(p);
+h = satkproject.fileHash(p);
 end
 function root = localRoot(~)
 root = pwd;

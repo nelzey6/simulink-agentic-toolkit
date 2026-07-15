@@ -11,9 +11,9 @@ end
 try
     obj = jsondecode(char(string(value)));
 catch ME
-    error('satkrepo:InvalidJsonObject', 'Expected JSON object string: %s', ME.message);
+    error('satkproject:InvalidJsonObject', 'Expected JSON object string: %s', ME.message);
 end
 if ~isstruct(obj)
-    error('satkrepo:InvalidJsonObject', 'Expected JSON object string.');
+    error('satkproject:InvalidJsonObject', 'Expected JSON object string.');
 end
 end

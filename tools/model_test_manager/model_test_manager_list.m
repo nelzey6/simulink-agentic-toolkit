@@ -1,21 +1,21 @@
-function out = test_manager_list(test_file, cachePolicy)
-%TEST_MANAGER_LIST Inspect Simulink Test Manager .mldatx suites/cases.
+function out = model_test_manager_list(test_file, cachePolicy)
+%MODEL_TEST_MANAGER_LIST Inspect Simulink Test Manager .mldatx suites/cases.
 if nargin < 2 || strlength(string(cachePolicy)) == 0, cachePolicy = 'use-if-fresh'; end
 test_file = resolveFile(test_file);
-fingerprint = struct('test_file', test_file, 'hash', satkrepo.fileHash(test_file));
+fingerprint = struct('test_file', test_file, 'hash', satkproject.fileHash(test_file));
 repo = pwd;
 [~, baseName, extName] = fileparts(test_file);
-cp = satkrepo.cachePath(repo, 'test_manager', ['list_' regexprep([baseName extName],'[^A-Za-z0-9_.-]','_')]);
-[hit, payload] = satkrepo.cacheRead(cp, fingerprint, cachePolicy);
+cp = satkproject.cachePath(repo, 'test_manager', ['list_' regexprep([baseName extName],'[^A-Za-z0-9_.-]','_')]);
+[hit, payload] = satkproject.cacheRead(cp, fingerprint, cachePolicy);
 if hit, out = payload; out.cache = cacheInfo('hit', cp, cachePolicy); return; end
-if strcmp(char(cachePolicy), 'cache-only'), error('test_manager_list:CacheMiss','No fresh test manager cache.'); end
+if strcmp(char(cachePolicy), 'cache-only'), error('model_test_manager_list:CacheMiss','No fresh test manager cache.'); end
 tf = sltest.testmanager.load(test_file);
 suites = listSuites(tf);
 allCases = listAllCases(tf);
 out = struct('status','ok','test_file',test_file,'name',safeProp(tf,'Name'),'suite_count',numel(suites), ...
     'test_case_count',numel(allCases),'suites',suites,'test_cases',allCases);
 out.cache = cacheInfo('miss', cp, cachePolicy);
-satkrepo.cacheWrite(cp, fingerprint, rmfield(out,'cache'), cachePolicy);
+satkproject.cacheWrite(cp, fingerprint, rmfield(out,'cache'), cachePolicy);
 end
 
 function suites = listSuites(tf)

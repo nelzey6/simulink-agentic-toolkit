@@ -1,5 +1,5 @@
-function out = test_manager_create_case(test_file, suite, test_case, test_type, model, component, harness, stop_time)
-%TEST_MANAGER_CREATE_CASE Create a native Simulink Test Manager test case.
+function out = model_test_manager_create_case(test_file, suite, test_case, test_type, model, component, harness, stop_time)
+%MODEL_TEST_MANAGER_CREATE_CASE Create a native Simulink Test Manager test case.
 if nargin < 4 || strlength(string(test_type)) == 0, test_type = 'simulation'; end
 if nargin < 5, model = ''; end
 if nargin < 6, component = ''; end
@@ -34,5 +34,5 @@ if strlength(string(stop_time)) > 0
 end
 end
 function p = resolveFile(p), p=char(string(p)); if ~isfile(p), q=which(p); if ~isempty(q), p=q; end, end, end
-function invalidateCaches(test_file), try delete(fullfile(pwd,'.satk','repo-cache','test_manager','*.json')); catch, end, %#ok<NASGU>
+function invalidateCaches(test_file), try delete(fullfile(pwd,'.satk','model-project-cache','test_manager','*.json')); catch, end, %#ok<NASGU>
 end

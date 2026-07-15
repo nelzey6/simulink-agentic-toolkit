@@ -1,5 +1,5 @@
-function out = test_manager_run(test_file, tests, parallel, report, runner)
-%TEST_MANAGER_RUN Run selected/full native Simulink Test Manager tests.
+function out = model_test_manager_run(test_file, tests, parallel, report, runner)
+%MODEL_TEST_MANAGER_RUN Run selected/full native Simulink Test Manager tests.
 % tests is JSON array of full/partial test names. report is JSON object with
 % fields output_dir, junit, pdf. runner: matlab_unittest (default) or testmanager.
 if nargin < 2, tests = '[]'; end
@@ -18,8 +18,8 @@ function out = runWithUnittest(test_file, tests, parallel, report)
 import matlab.unittest.TestRunner;
 import matlab.unittest.plugins.XMLPlugin;
 import matlab.unittest.plugins.TestReportPlugin;
-selected = satkrepo.jsonList(tests);
-rep = satkrepo.jsonObject(report);
+selected = satkproject.jsonList(tests);
+rep = satkproject.jsonObject(report);
 if isfield(rep,'output_dir'), outputDir = char(string(rep.output_dir)); else, outputDir = fullfile(pwd,'work','results'); end
 if ~exist(outputDir,'dir'), mkdir(outputDir); end
 suite = testsuite(test_file);
@@ -38,23 +38,23 @@ if ~isempty(selected)
 end
 tr = TestRunner.withTextOutput;
 artifacts = struct();
-if ~isfield(rep,'junit') || satkrepo.str2logical(rep.junit,true)
+if ~isfield(rep,'junit') || satkproject.str2logical(rep.junit,true)
     artifacts.junit = fullfile(outputDir,'TestReport.xml');
     tr.addPlugin(XMLPlugin.producingJUnitFormat(artifacts.junit));
 end
-if isfield(rep,'pdf') && satkrepo.str2logical(rep.pdf,false)
+if isfield(rep,'pdf') && satkproject.str2logical(rep.pdf,false)
     artifacts.pdf = fullfile(outputDir,'TestReport.pdf');
     tr.addPlugin(TestReportPlugin.producingPDF(artifacts.pdf,'IncludingPassingDiagnostics',true,'IncludingCommandWindowText',true));
 end
 tr.ArtifactsRootFolder = outputDir;
-useParallel = satkrepo.str2logical(parallel,false);
+useParallel = satkproject.str2logical(parallel,false);
 if useParallel
     results = tr.runInParallel(suite);
 else
     results = tr.run(suite);
 end
 out = summarizeUnittest(results, test_file, artifacts, outputDir);
-try delete(fullfile(pwd,'.satk','repo-cache','results','*.json')); catch, end
+try delete(fullfile(pwd,'.satk','model-project-cache','results','*.json')); catch, end
 end
 
 function out = summarizeUnittest(results, test_file, artifacts, outputDir)
@@ -77,7 +77,7 @@ end
 
 function out = runWithTestManager(test_file, parallel)
 sltest.testmanager.load(test_file);
-rs = sltest.testmanager.run('Parallel', satkrepo.str2logical(parallel,false));
+rs = sltest.testmanager.run('Parallel', satkproject.str2logical(parallel,false));
 out = struct('status','completed','runner','testmanager','test_file',test_file,'result_set',char(string(rs)));
 try
     out.num_failed = rs.NumFailed; out.num_passed = rs.NumPassed; out.num_total = rs.NumTotal;

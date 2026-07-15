@@ -1,13 +1,13 @@
-function out = test_manager_configure_case(test_file, suite, test_case, config)
-%TEST_MANAGER_CONFIGURE_CASE Configure a Simulink Test Manager test case.
+function out = model_test_manager_configure_case(test_file, suite, test_case, config)
+%MODEL_TEST_MANAGER_CONFIGURE_CASE Configure a Simulink Test Manager test case.
 % config is a JSON object. Supported fields: enabled, model, harness, harness_owner,
 % stop_time, start_time, simulation_mode, callbacks, properties.
 test_file = resolveFile(test_file);
-cfg = satkrepo.jsonObject(config);
+cfg = satkproject.jsonObject(config);
 tf = sltest.testmanager.load(test_file);
 tc = findCase(tf, suite, test_case);
 if isempty(tc), error('test_manager_configure_case:NotFound','Test case not found: %s/%s', suite, test_case); end
-if isfield(cfg,'enabled'), tc.Enabled = satkrepo.str2logical(cfg.enabled, true); end
+if isfield(cfg,'enabled'), tc.Enabled = satkproject.str2logical(cfg.enabled, true); end
 if isfield(cfg,'model'), tc.setProperty('Model', char(string(cfg.model))); end
 if isfield(cfg,'harness'), tc.setProperty('HarnessName', char(string(cfg.harness))); end
 if isfield(cfg,'harness_owner'), tc.setProperty('HarnessOwner', char(string(cfg.harness_owner))); end
@@ -29,7 +29,7 @@ end
 tf.saveToFile();
 out = struct('status','configured','test_file',test_file,'suite',char(string(suite)), ...
     'test_case',char(string(test_case)),'test_path',tc.TestPath);
-try delete(fullfile(pwd,'.satk','repo-cache','test_manager','*.json')); catch, end
+try delete(fullfile(pwd,'.satk','model-project-cache','test_manager','*.json')); catch, end
 end
 
 function tc = findCase(tf, suite, test_case)

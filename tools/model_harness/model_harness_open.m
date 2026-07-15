@@ -1,5 +1,5 @@
-function out = harness_open(model, component, harness_name)
-%HARNESS_OPEN Open an existing Simulink Test harness for editing.
+function out = model_harness_open(model, component, harness_name)
+%MODEL_HARNESS_OPEN Open an existing Simulink Test harness for editing.
 model = char(string(model)); component = char(string(component)); harness_name = char(string(harness_name));
 ensureLoaded(model);
 sltest.harness.open(component, harness_name);
