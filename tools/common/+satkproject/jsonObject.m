@@ -1,11 +1,11 @@
 function obj = jsonObject(value)
 %JSONOBJECT Decode MCP JSON object string. Empty/missing -> struct().
-if nargin < 1 || isempty(value) || strlength(string(value)) == 0
-    obj = struct();
+if nargin >= 1 && isstruct(value)
+    obj = value;
     return;
 end
-if isstruct(value)
-    obj = value;
+if nargin < 1 || isempty(value) || strlength(string(value)) == 0
+    obj = struct();
     return;
 end
 try

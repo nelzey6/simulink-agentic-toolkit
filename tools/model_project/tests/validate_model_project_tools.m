@@ -13,6 +13,7 @@ retained = [
     "model_context"
     "model_cache_invalidate"
     "model_project_inventory"
+    "model_test_manager_author"
     "model_test_manager_list"
     "model_test_manager_run"
 ];
@@ -35,6 +36,7 @@ expectedOrder = struct();
 expectedOrder.model_context = {'task','model','scope','cachePolicy'};
 expectedOrder.model_cache_invalidate = {'model'};
 expectedOrder.model_project_inventory = {'repo'};
+expectedOrder.model_test_manager_author = {'test_file','suite','test_case','definition'};
 expectedOrder.model_test_manager_list = {'test_file'};
 expectedOrder.model_test_manager_run = {'test_file','tests','parallel','report'};
 
@@ -80,6 +82,21 @@ end
 if isfield(context.properties,'budget'), problems(end+1) = "model_context budget remains"; end
 if isfield(registryJson.tools.model_project_inventory.inputSchema.properties,'cachePolicy')
     problems(end+1) = "project inventory cache policy remains";
+end
+author = registryJson.tools.model_test_manager_author.inputSchema;
+if ~isequal(cellstr(string(author.required(:))), {'test_file';'suite';'test_case';'definition'})
+    problems(end+1) = "model_test_manager_author required inputs differ from contract";
+end
+definition = author.properties.definition;
+if ~isfield(definition,'additionalProperties') || definition.additionalProperties
+    problems(end+1) = "model_test_manager_author definition permits arbitrary properties";
+end
+if ~isequal(cellstr(string(definition.required(:))), {'model'})
+    problems(end+1) = "model_test_manager_author definition model requirement differs from contract";
+end
+if ~isequal(string(definition.properties.simulation_mode.enum(:)), ...
+        ["Normal";"Accelerator";"Rapid Accelerator";"SIL";"PIL"])
+    problems(end+1) = "model_test_manager_author simulation modes differ from contract";
 end
 
 results = struct('status','passed','toolkitRoot',toolkitRoot,'retained',{cellstr(retained)}, ...

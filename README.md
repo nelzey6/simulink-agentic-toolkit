@@ -188,7 +188,9 @@ After you install the Simulink Agentic Toolkit, your agent can use the following
 | `model_context` | Build one complete compile-free structural snapshot on first use, then return compact cached context for later tasks |
 | `model_cache_invalidate` | Remove a model snapshot after an edit batch so the next context call rebuilds it |
 | `model_project_inventory` | Discover models, libraries, dictionaries, external harness models, and Test Manager files |
-| `model_test_manager_list`, `model_test_manager_run` | Inspect and execute existing native Simulink Test Manager `.mldatx` tests *(requires Simulink Test)* |
+| `model_test_manager_author`, `model_test_manager_list`, `model_test_manager_run` | Author, inspect, and execute simulation cases in existing native Simulink Test Manager `.mldatx` files *(requires Simulink Test)* |
+
+Create and save the initial model, Test Manager file, and any permanent test harness in MATLAB. The agent can then build an empty model or external harness with `model_edit`, populate an existing `.mldatx` with `model_test_manager_author`, and inspect or execute the result. The toolkit intentionally does not duplicate MATLAB's basic file and harness lifecycle controls.
 
 
 ---

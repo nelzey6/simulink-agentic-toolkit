@@ -349,6 +349,81 @@
                                       }
                   },
                   {
+                      "name":  "model_test_manager_author",
+                      "title":  "Model Test Manager Author",
+                      "description":  "Create or update one simulation test case in an existing Simulink Test Manager .mldatx file. Does not create test files or harnesses.",
+                      "annotations":  {
+                                          "readOnlyHint":  false,
+                                          "destructiveHint":  false,
+                                          "idempotentHint":  true,
+                                          "openWorldHint":  false
+                                      },
+                      "inputSchema":  {
+                                          "type":  "object",
+                                          "properties":  {
+                                                             "test_file":  {
+                                                                               "type":  "string",
+                                                                               "description":  "Path to an existing .mldatx test file"
+                                                                           },
+                                                             "suite":  {
+                                                                          "type":  "string",
+                                                                          "description":  "Suite name to create or update"
+                                                                      },
+                                                             "test_case":  {
+                                                                              "type":  "string",
+                                                                              "description":  "Simulation test case name to create or update"
+                                                                          },
+                                                             "definition":  {
+                                                                              "type":  "object",
+                                                                              "description":  "Complete supported definition for the simulation case",
+                                                                              "properties":  {
+                                                                                                 "model":  {
+                                                                                                               "type":  "string",
+                                                                                                               "description":  "Existing .slx or .mdl system-under-test file"
+                                                                                                           },
+                                                                                                 "harness":  {
+                                                                                                                 "type":  "string",
+                                                                                                                 "description":  "Existing harness name; requires harness_owner"
+                                                                                                             },
+                                                                                                 "harness_owner":  {
+                                                                                                                       "type":  "string",
+                                                                                                                       "description":  "Existing harness owner; requires harness"
+                                                                                                                   },
+                                                                                                 "enabled":  {
+                                                                                                                 "type":  "boolean",
+                                                                                                                 "default":  true
+                                                                                                             },
+                                                                                                 "stop_time":  {
+                                                                                                                   "type":  "string",
+                                                                                                                   "description":  "Optional finite nonnegative stop-time override"
+                                                                                                               },
+                                                                                                 "simulation_mode":  {
+                                                                                                                         "type":  "string",
+                                                                                                                         "enum":  [
+                                                                                                                                      "Normal",
+                                                                                                                                      "Accelerator",
+                                                                                                                                      "Rapid Accelerator",
+                                                                                                                                      "SIL",
+                                                                                                                                      "PIL"
+                                                                                                                                  ],
+                                                                                                                         "default":  "Normal"
+                                                                                                                     }
+                                                                                             },
+                                                                              "required":  [
+                                                                                               "model"
+                                                                                           ],
+                                                                              "additionalProperties":  false
+                                                                          }
+                                                         },
+                                          "required":  [
+                                                           "test_file",
+                                                           "suite",
+                                                           "test_case",
+                                                           "definition"
+                                                       ]
+                                      }
+                  },
+                  {
                       "name":  "model_test_manager_list",
                       "title":  "Model Test Manager List",
                       "description":  "Inspect an existing Simulink Test Manager .mldatx file. Lists suites, test cases, harness mappings, stop times, modes, assessments, baselines, and iteration counts.",
@@ -520,6 +595,17 @@
                                                                                ]
                                                                  }
                                                    },
+                       "model_test_manager_author":  {
+                                                         "function":  "model_test_manager_author",
+                                                         "input":  {
+                                                                       "order":  [
+                                                                                     "test_file",
+                                                                                     "suite",
+                                                                                     "test_case",
+                                                                                     "definition"
+                                                                                 ]
+                                                                   }
+                                                     },
                        "model_test_manager_run":  {
                                                       "function":  "model_test_manager_run",
                                                       "input":  {

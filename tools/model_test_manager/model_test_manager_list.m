@@ -33,48 +33,11 @@ cases = casesInfo(objs);
 end
 
 function cases = casesInfo(objs)
-template = caseInfoTemplate();
+template = satktestmanager.caseInfo();
 cases = repmat(template, 0, 1);
 for i=1:numel(objs)
-    cases(end+1,1) = caseInfo(objs(i)); %#ok<AGROW>
-end
-end
-
-function item = caseInfoTemplate()
-item = struct('name','','test_path','','test_type','','enabled',true,'model','','harness','', ...
-    'harness_owner','','stop_time','','simulation_mode','','iterations',0,'assessments',0,'baseline_criteria',0);
-end
-
-function item = caseInfo(tc)
-item = struct();
-item.name = safeProp(tc,'Name');
-item.test_path = safeProp(tc,'TestPath');
-item.test_type = safeProp(tc,'TestType');
-item.enabled = safeProp(tc,'Enabled');
-item.model = safeGet(tc,'Model');
-item.harness = safeGet(tc,'HarnessName');
-item.harness_owner = safeGet(tc,'HarnessOwner');
-item.stop_time = safeGet(tc,'StopTime');
-item.simulation_mode = safeGet(tc,'SimulationMode');
-try
-    it = tc.getIterations();
-    item.iterations = numel(it);
-catch
-    item.iterations = 0;
-end
-try
-    ass = tc.getAssessments();
-    item.assessments = numel(ass);
-catch
-    item.assessments = 0;
-end
-try
-    bc = tc.getBaselineCriteria();
-    item.baseline_criteria = numel(bc);
-catch
-    item.baseline_criteria = 0;
+    cases(end+1,1) = satktestmanager.caseInfo(objs(i)); %#ok<AGROW>
 end
 end
 function v = safeProp(obj, name), try v=obj.(name); catch, v=''; end, v=normalize(v); end
-function v = safeGet(obj, name), try v=obj.getProperty(name); catch, v=''; end, v=normalize(v); end
 function v = normalize(v), if isstring(v), v=char(v); elseif islogical(v)||isnumeric(v), return; elseif isobject(v), v=char(string(v)); end, end

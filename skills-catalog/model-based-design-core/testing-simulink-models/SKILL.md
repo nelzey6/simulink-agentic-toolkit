@@ -20,6 +20,7 @@ Use this skill when you need persistent, reusable pass/fail verification of mode
 - Creating regression tests to catch future breakage
 - Reproducing and validating bug fixes with structured assertions
 - Collecting decision coverage metrics for a component
+- Populating an existing native Test Manager `.mldatx` file with a simulation case
 
 ## When NOT to Use
 
@@ -37,6 +38,12 @@ Use this skill when you need persistent, reusable pass/fail verification of mode
 3. **Run in draft mode:** Call `model_test` with `draft_mode='true'` for rapid iteration (~3s). Fix syntax or signal errors.
 4. **Run full compilation:** Once draft passes, re-run with `draft_mode='false'` to validate against the actual compiled model (catches type/dimension mismatches).
 5. **Expand coverage:** Add scenarios for edge cases, fault conditions, and boundary behavior. Use `coverage='decision'` to identify untested branches.
+
+## Existing Native Test Manager Files
+
+Use `model_test_manager_author` when the user has created and saved an empty or existing `.mldatx` file in MATLAB and wants a native simulation case instead of a Gherkin test. The tool creates or updates a named suite and case idempotently and can associate an existing harness. Use `model_test_manager_list` to inspect the saved definition and `model_test_manager_run` to execute it.
+
+The user creates `.mldatx` files and permanent harnesses in MATLAB. Do not ask for file-creation or harness-lifecycle tools. Prefer external harnesses because `model_read`, `model_edit`, and `model_check` can operate on their `.slx` files normally.
 
 ## Syntax Reference
 

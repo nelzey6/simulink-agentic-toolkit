@@ -29,6 +29,7 @@ MCP tools are available when the MCP server is connected (see `tools/registry.js
 - `model_test` — Gherkin-based behavioral testing (requires Simulink Test)
 - `model_cache_invalidate` — remove the complete model snapshot after an edit batch
 - `model_project_inventory` — discover existing models, external harness models, dictionaries, and Test Manager assets
+- `model_test_manager_author` — create or update a simulation case in an existing native Test Manager file; does not create `.mldatx` files or harnesses (requires Simulink Test)
 - `model_test_manager_list`, `model_test_manager_run` — inspect and run existing native Test Manager tests (requires Simulink Test)
 
 ## MATLAB Prerequisite
