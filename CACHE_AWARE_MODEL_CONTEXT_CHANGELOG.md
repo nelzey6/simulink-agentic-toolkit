@@ -37,3 +37,13 @@ The lower-level cache status/get/update/analyze tools, secondary project/Test Ma
 Automated tests cover cold build, warm unloaded reads, cache-only behavior, invalidation, saved and dirty model changes, dictionary changes, project inventory, and registry/schema parity.
 
 On `mv_mot_ctrl`, validation captured 4,643 blocks and 5,176 connections. The cold build took about 73 seconds; a warm task-oriented lookup took about 0.33 seconds without loading the model. Inventory found 62 external harness models, Test Manager inspection found 67 cases, and one selected native test passed.
+
+## Release acceptance
+
+Before release, run one smoke test from the packaged installer rather than a source checkout:
+
+1. Install `agenticToolkitInstaller.mltbx` into a clean test environment and run `setupAgenticToolkit("install")`.
+2. Start a fresh MATLAB session, run `satk_initialize`, and confirm the MCP server advertises every name in `tools/registry.json`.
+3. Run a cold `model_context` call on a generated model and confirm that it writes one schema-v2 snapshot.
+4. Close the model, run a warm `model_context` call, and confirm that the model remains unloaded.
+5. Confirm `model_project_inventory`, `model_test_manager_list`, and `model_test_manager_run` are registered; execute the Test Manager checks when Simulink Test is licensed.

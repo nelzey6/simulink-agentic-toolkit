@@ -37,7 +37,7 @@ Your agent reads **skills** for domain knowledge, then calls **MCP tools** to in
 
 - **MATLAB R2023a or later** with **Simulink**
 - A supported **AI coding agent** (see [Supported Platforms](README.md#supported-platforms))
-- **Simulink Test** *(optional)* — required only for the `model_test` tool
+- **Simulink Test** *(optional)* — required for `model_test`, `model_test_manager_author`, `model_test_manager_list`, and `model_test_manager_run`
 - Some skills require additional toolboxes (e.g., System Composer, Simscape, Stateflow). Check the `requires-products` field in each skill's `manifest.yaml` under [`skills-catalog/`](skills-catalog/) for additional requirements.
 
 ## Supported Platforms
@@ -157,7 +157,7 @@ satk_initialize(MCPServerPath="//server/share/bin/matlab-mcp-server")
 >     addpath("~/.matlab/agentic-toolkits/simulink")
 >     satk_initialize
 > end
-> `
+> ```
 
 ### Verify
 
@@ -188,7 +188,7 @@ After you install the Simulink Agentic Toolkit, your agent can use the following
 | `model_context` | Build one complete compile-free structural snapshot on first use, then return compact cached context for later tasks |
 | `model_cache_invalidate` | Remove a model snapshot after an edit batch so the next context call rebuilds it |
 | `model_project_inventory` | Discover models, libraries, dictionaries, external harness models, and Test Manager files |
-| `model_test_manager_list`, `model_test_manager_run` | Inspect and execute existing native Simulink Test Manager `.mldatx` tests |
+| `model_test_manager_list`, `model_test_manager_run` | Inspect and execute existing native Simulink Test Manager `.mldatx` tests *(requires Simulink Test)* |
 
 
 ---

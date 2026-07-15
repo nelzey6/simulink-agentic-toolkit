@@ -7,7 +7,6 @@
 If the user asks to set up the Simulink Agentic Toolkit, direct them to run the following in MATLAB:
 
 ```matlab
-addpath('<path-to-setup-folder>')
 setupAgenticToolkit("install")
 ```
 
@@ -30,7 +29,7 @@ MCP tools are available when the MCP server is connected (see `tools/registry.js
 - `model_test` — Gherkin-based behavioral testing (requires Simulink Test)
 - `model_cache_invalidate` — remove the complete model snapshot after an edit batch
 - `model_project_inventory` — discover existing models, external harness models, dictionaries, and Test Manager assets
-- `model_test_manager_list`, `model_test_manager_run` — inspect and run existing native Test Manager tests
+- `model_test_manager_list`, `model_test_manager_run` — inspect and run existing native Test Manager tests (requires Simulink Test)
 
 ## MATLAB Prerequisite
 

@@ -5,7 +5,7 @@ This page shows you how to configure the Simulink® Agentic Toolkit. For an over
 
 - **MATLAB R2023a or later** with **Simulink**
 - A supported **AI coding agent**
-- **Simulink Test** *(optional)* — required only for the `model_test` tool
+- **Simulink Test** *(optional)* — required for `model_test`, `model_test_manager_author`, `model_test_manager_list`, and `model_test_manager_run`
 - Some skills require additional toolboxes (e.g., System Composer, Simscape, Stateflow). Check the `requires-products` field in each skill's `manifest.yaml` under [`skills-catalog/`](skills-catalog/) for additional requirements.
 
 
@@ -29,9 +29,9 @@ If you use automated setup using the 'setupAgenticToolkit' function, it writes t
 
 **GitHub Copilot** — Setup writes global MCP config to the VS Code user-profile `mcp.json` (`~/Library/Application Support/Code/User/mcp.json` on macOS, `~/.config/Code/User/mcp.json` on Linux, `%APPDATA%\Code\User\mcp.json` on Windows) and creates skill symlinks in `~/.agents/skills/`. Reload VS Code after setup completes (Cmd/Ctrl + Shift + P, then "Developer: Reload Window").
 
-**OpenAI Codex** — Setup writes `~/.codex/config.toml`. Skills are installed as global symlinks in `~/.agents/skills/`. After setup, you may want to tune two settings in the `[mcp_servers.matlab]` section of `~/.codex/config.toml`:
-- `tool_timeout_sec = 600` — increases the tool timeout from the default (which is too short for many MATLAB operations like test suites and simulations). Increase further for very long-running tasks.
-- `env_vars = ['WINDIR']` — **Windows only.** Required for Simulink to work, since Codex strips environment variables from MCP server subprocesses by default.
+**OpenAI Codex** — Setup writes `~/.codex/config.toml`. Skills are installed as global symlinks in `~/.agents/skills/`. After setup, verify these settings in the `[mcp_servers.matlab]` section of `~/.codex/config.toml`:
+- `tool_timeout_sec = 600` — recommended minimum for operations such as initial structural snapshot builds, test suites, and simulations. Increase it for longer-running projects.
+- `env_vars = ['WINDIR']` — **Windows only.** Required for Simulink because Codex strips environment variables from MCP server subprocesses by default.
 
 **Gemini CLI** — Setup writes global config to `~/.gemini/settings.json` and creates skill symlinks in `~/.agents/skills/`. Start a new Gemini session after setup.
 
@@ -111,7 +111,7 @@ Then select **Agent configurations only** from the interactive prompt. This remo
 | MCP server can't connect to MATLAB | Connector not running or stale connection | Add `--log-folder` and `--log-level` arguments to your MCP server configuration (see [MATLAB MCP Server arguments](https://github.com/matlab/matlab-mcp-server#arguments)), then run `satk_initialize` again (it calls `shareMATLABSession` automatically). Check the generated logs. |
 | macOS blocks the MCP server binary | Gatekeeper quarantine | Right-click → Open, or run: `xattr -d com.apple.quarantine ~/.matlab/agentic-toolkits/bin/matlab-mcp-server` |
 | "rmiml.selectionLinkHelper" error | Path corruption from other toolboxes | Run `restoredefaultpath` in MATLAB, then re-run `satk_initialize` |
-| `model_test` fails or is unavailable | Simulink Test not installed | Install Simulink Test, or use the other 7 tools which work without it |
+| `model_test` or a Test Manager tool fails or is unavailable | Simulink Test not installed | Install Simulink Test, or use the tools that do not require it |
 | Codex tool calls time out | Default tool timeout too short for MATLAB | Add `tool_timeout_sec = 600` (or higher) to `[mcp_servers.matlab]` in `~/.codex/config.toml` |
 | Simulink fails in Codex on Windows | Missing `WINDIR` environment variable | Add `env_vars = ['WINDIR']` to `[mcp_servers.matlab]` in `~/.codex/config.toml` |
 
