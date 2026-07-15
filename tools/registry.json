@@ -269,7 +269,7 @@
                   "model_context":  {
                                         "name":  "model_context",
                                         "title":  "Model Context",
-                                        "description":  "FIRST-CHOICE structural context for Simulink engineering tasks. The first call builds one complete compile-free model snapshot; later calls resolve scopes and return compact context from that snapshot without loading the model. Use targeted model_read calls when exact algorithmic expressions or current edit identifiers are required.",
+                                        "description":  "FIRST-CHOICE structural context for Simulink engineering tasks. The first call builds one complete compile-free model snapshot; later calls rank task-relevant scopes and return compact context without loading the model. Returned block paths and in-scope connection endpoints are relative to resolvedScope; candidate and resolved scope paths remain complete. Use targeted model_read calls when exact algorithmic expressions or current edit identifiers are required.",
                                         "annotations":  {
                                                             "readOnlyHint":  true,
                                                             "destructiveHint":  false,

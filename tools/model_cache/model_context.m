@@ -1,5 +1,7 @@
 function out = model_context(task, model, scope, cachePolicy)
 %MODEL_CONTEXT Return compact cache-first Simulink working context for an engineering task.
+% Block paths and in-scope connection endpoints in context are relative to
+% the resolved scope; resolved and candidate scope paths remain complete.
 if nargin < 1, task = ''; end
 if nargin < 2 || strlength(string(model)) == 0, model = 'auto'; end
 if nargin < 3 || strlength(string(scope)) == 0, scope = 'auto'; end

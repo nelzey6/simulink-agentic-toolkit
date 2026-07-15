@@ -56,7 +56,7 @@ out.candidateScopes = candidates;
 out.context = context;
 out.cache = struct('path',snapshotPath,'state',state,'builtAt',snapshot.builtAt, ...
     'blockCount',numel(snapshot.blocks),'connectionCount',numel(snapshot.connections));
-out.nextActions = nextActions(resolvedScope, snapshot.model.path);
+out.nextActions = nextActions(resolvedScope, snapshot.model.path, context.truncated);
 end
 
 function snapshot = buildSnapshot(modelFile, modelName, projectRoot)
@@ -246,32 +246,71 @@ if ~strcmpi(requestedScope,'auto') && ~isempty(requestedScope)
 end
 
 words = meaningfulWords(task);
-for pass = 1:2
-    for i = 1:numel(snapshot.blocks)
-        b = snapshot.blocks(i);
-        name = lower(strtrim(char(b.name)));
-        path = lower(char(b.path));
-        reason = '';
-        if pass == 1 && strlength(name) >= 3 && any(strcmp(words,name))
-            reason = 'exact block-name token mentioned in task';
-        elseif pass == 2
-            for k = 1:numel(words)
-                if strlength(words{k}) >= 4 && (contains(name,words{k}) || contains(path,words{k}))
-                    reason = ['partial match: ' words{k}];
-                    break;
-                end
-            end
-        end
-        if ~isempty(reason), candidates(end+1,1) = candidate(b,reason); end %#ok<AGROW>
-        if numel(candidates) >= 10, break; end
+taskText = lower(strtrim(char(task)));
+matchTemplate = struct('index',0,'score',0,'reason','');
+matches = repmat(matchTemplate,0,1);
+for i = 1:numel(snapshot.blocks)
+    [score, reason] = scopeMatchScore(snapshot.blocks(i), taskText, words);
+    if score > 0
+        matches(end+1,1) = struct('index',i,'score',score,'reason',reason); %#ok<AGROW>
     end
-    if ~isempty(candidates), break; end
+end
+if ~isempty(matches)
+    ranking = [[matches.score].', [matches.index].'];
+    [~, order] = sortrows(ranking, [-1 2]);
+    matches = matches(order(1:min(numel(order),10)));
+    for i = 1:numel(matches)
+        candidates(end+1,1) = candidate(snapshot.blocks(matches(i).index), matches(i).reason); %#ok<AGROW>
+    end
 end
 if isempty(candidates)
     root = struct('path',snapshot.model.name,'sid','','name',snapshot.model.name,'blockType','block_diagram');
     candidates(1) = candidate(root,'fallback to root');
 end
 scope = candidates(1).path;
+end
+
+function [score, reason] = scopeMatchScore(block, taskText, taskWords)
+score = 0;
+reason = '';
+if isempty(taskWords), return; end
+
+name = lower(strtrim(char(block.name)));
+path = lower(char(block.path));
+nameWords = meaningfulWords(name);
+exactCount = sum(ismember(nameWords, taskWords));
+partialCount = 0;
+pathCount = 0;
+for i = 1:numel(taskWords)
+    word = taskWords{i};
+    if strlength(word) < 4, continue; end
+    if contains(name,word), partialCount = partialCount + 1;
+    elseif contains(path,word), pathCount = pathCount + 1;
+    end
+end
+
+if strlength(name) >= 3 && contains(taskText,name)
+    score = 100 + 20*exactCount;
+    reason = 'complete block-name phrase mentioned in task';
+elseif exactCount > 0
+    score = 60 + 20*exactCount;
+    reason = 'block-name tokens mentioned in task';
+elseif partialCount > 0
+    score = 30 + 10*partialCount;
+    reason = 'partial block-name match';
+elseif pathCount > 0
+    score = 10 + pathCount;
+    reason = 'task terms appear only in block path';
+end
+
+if score > 0 && isScopeContainer(block)
+    score = score + 25;
+    reason = [reason '; scope container preferred'];
+end
+end
+
+function tf = isScopeContainer(block)
+tf = any(strcmpi(char(block.blockType), {'SubSystem','ModelReference'}));
 end
 
 function item = candidate(block, reason)
@@ -312,16 +351,72 @@ for i = 1:numel(blocks)
     if isempty(name), name = 'Unknown'; end
     if isfield(typeCounts,name), typeCounts.(name) = typeCounts.(name)+1; else, typeCounts.(name)=1; end
 end
+blocks = compactBlockRecords(blocks, scope);
+connections = compactConnectionRecords(snapshot.connections(connectionIndices), scope);
 context = struct('scope',scope,'summary',struct('returnedBlocks',numel(blocks), ...
+    'totalDirectBlocks',numel(children),'omittedBlocks',max(0,numel(children)-numel(indices)), ...
     'totalSnapshotBlocks',numel(snapshot.blocks),'blockTypes',typeCounts), ...
-    'blocks',blocks,'connections',snapshot.connections(connectionIndices), ...
+    'blocks',blocks,'connections',connections, ...
     'truncated',struct('blocks',numel(children)>25,'connections',numel(connectionIndices)>=40));
 end
 
-function actions = nextActions(scope, model)
+function records = compactBlockRecords(records, scope)
+if isempty(records), return; end
+for i = 1:numel(records)
+    records(i).path = relativeToScope(records(i).path, scope);
+end
+records = rmfield(records, 'parent');
+if all(cellfun(@isempty,{records.referenceBlock})), records = rmfield(records,'referenceBlock'); end
+linkStatus = {records.linkStatus};
+if all(cellfun(@(v) isempty(v) || strcmpi(v,'none'),linkStatus)), records = rmfield(records,'linkStatus'); end
+if all(cellfun(@isempty,{records.maskType})), records = rmfield(records,'maskType'); end
+emptyPorts = '[0 0 0 0 0 0 0 0 0 0]';
+if all(cellfun(@(v) isempty(v) || strcmp(v,emptyPorts),{records.ports})), records = rmfield(records,'ports'); end
+if all(arrayfun(@(r) portNamesAreEmpty(r.portNames),records)), records = rmfield(records,'portNames'); end
+end
+
+function records = compactConnectionRecords(records, scope)
+if isempty(records), return; end
+for i = 1:numel(records)
+    records(i).srcBlock = relativeToScope(records(i).srcBlock, scope);
+    records(i).dstBlock = relativeToScope(records(i).dstBlock, scope);
+end
+if all(isnan([records.srcPort])), records = rmfield(records,'srcPort'); end
+if all(isnan([records.dstPort])), records = rmfield(records,'dstPort'); end
+if all(cellfun(@isempty,{records.name})), records = rmfield(records,'name'); end
+end
+
+function value = relativeToScope(value, scope)
+value = char(value);
+scope = char(scope);
+if strcmp(value,scope)
+    value = '.';
+    return;
+end
+prefix = [scope '/'];
+if startsWith(value,prefix), value = value(numel(prefix)+1:end); end
+end
+
+function tf = portNamesAreEmpty(value)
+tf = textValuesAreEmpty(value.inputs) && textValuesAreEmpty(value.outputs);
+end
+
+function tf = textValuesAreEmpty(values)
+if isempty(values), tf = true; return; end
+if ischar(values), values = {values}; end
+if isstring(values), values = cellstr(values); end
+tf = iscell(values) && all(cellfun(@(v) isempty(strtrim(char(v))),values));
+end
+
+function actions = nextActions(scope, model, truncated)
 actions = repmat(struct('tool','','args',struct(),'reason',''),0,1);
+readReason = 'Get current block IDs and algorithmic expressions before editing.';
+if truncated.blocks || truncated.connections
+    readReason = ['Cached context is truncated. Inspect candidateScopes or request a deeper explicit scope; ' ...
+        'use this targeted model_read when exact current structure is required.'];
+end
 actions(end+1) = struct('tool','model_read','args',struct('model',model,'scope',scope,'depth','0'), ...
-    'reason','Get current block IDs and algorithmic expressions before editing.');
+    'reason',readReason);
 actions(end+1) = struct('tool','model_query_params','args',struct('model',model,'targets',['["' scope '"]'], ...
     'params','["all"]','compile','false'),'reason','Resolve parameters only when the task requires values.');
 end

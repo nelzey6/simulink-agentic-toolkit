@@ -18,8 +18,17 @@ new_system(modelName);
 add_block('simulink/Sources/In1', [modelName '/Input']);
 add_block('simulink/Math Operations/Gain', [modelName '/Controller']);
 add_block('simulink/Sinks/Out1', [modelName '/Output']);
+add_block('simulink/Ports & Subsystems/Subsystem', [modelName '/Target Controller']);
+add_block('simulink/Math Operations/Gain', [modelName '/Target Controller/Controller Output']);
+add_block('simulink/Sinks/Terminator', [modelName '/Target Sink']);
+add_block('built-in/Subsystem', [modelName '/Wide Scope']);
+for i = 1:30
+    add_block('simulink/Sources/Constant', ...
+        sprintf('%s/Wide Scope/Item%02d',modelName,i));
+end
 add_line(modelName, 'Input/1', 'Controller/1');
 add_line(modelName, 'Controller/1', 'Output/1');
+add_line(modelName, 'Target Controller/1', 'Target Sink/1');
 save_system(modelName, modelFile);
 close_system(modelName, 0);
 
@@ -60,6 +69,63 @@ warm = model_context('inspect controller', testCase.TestData.modelFile, 'auto', 
 verifyEqual(testCase, warm.source, 'cache');
 verifyFalse(testCase, bdIsLoaded(testCase.TestData.modelName));
 verifyEqual(testCase, warm.resolvedScope, [testCase.TestData.modelName '/Controller']);
+end
+
+function testTaskScopePrefersBestMatchingSubsystem(testCase)
+out = model_context('inspect target controller output', testCase.TestData.modelFile, ...
+    'auto', 'use-if-fresh');
+
+verifyEqual(testCase, out.resolvedScope, ...
+    [testCase.TestData.modelName '/Target Controller']);
+verifyEqual(testCase, out.candidateScopes(1).blockType, 'SubSystem');
+end
+
+function testContextSliceUsesCompactScopeRelativeRecords(testCase)
+scope = [testCase.TestData.modelName '/Target Controller'];
+out = model_context('inspect target controller', testCase.TestData.modelFile, ...
+    scope, 'use-if-fresh');
+
+verifyEqual(testCase, out.context.scope, scope);
+verifyTrue(testCase, all(~startsWith({out.context.blocks.path}, ...
+    [testCase.TestData.modelName '/'])));
+verifyTrue(testCase, any(strcmp({out.context.blocks.path}, 'Controller Output')));
+verifyFalse(testCase, isfield(out.context.blocks, 'parent'));
+verifyFalse(testCase, isfield(out.context.blocks, 'referenceBlock'));
+verifyFalse(testCase, isfield(out.context.blocks, 'linkStatus'));
+verifyFalse(testCase, isfield(out.context.blocks, 'maskType'));
+verifyFalse(testCase, isfield(out.context.blocks, 'portNames'));
+if ~isempty(out.context.connections)
+    verifyTrue(testCase, all(~startsWith({out.context.connections.srcBlock}, ...
+        [testCase.TestData.modelName '/'])));
+    verifyFalse(testCase, isfield(out.context.connections, 'name'));
+    externalPath = [testCase.TestData.modelName '/Target Sink'];
+    external = out.context.connections(strcmp({out.context.connections.dstBlock}, externalPath));
+    verifyNotEmpty(testCase, external);
+    verifyEqual(testCase, external(1).srcBlock, '.');
+    internal = out.context.connections(~strcmp({out.context.connections.dstBlock}, externalPath));
+    verifyTrue(testCase, all(~startsWith({internal.dstBlock}, ...
+        [testCase.TestData.modelName '/'])));
+end
+
+warm = model_context('inspect target controller', testCase.TestData.modelFile, ...
+    scope, 'cache-only');
+verifyEqual(testCase, warm.context, out.context);
+verifyFalse(testCase, bdIsLoaded(testCase.TestData.modelName));
+end
+
+function testTruncatedContextReportsOmissionsAndRecovery(testCase)
+scope = [testCase.TestData.modelName '/Wide Scope'];
+out = model_context('inspect wide scope', testCase.TestData.modelFile, ...
+    scope, 'use-if-fresh');
+
+verifyEqual(testCase, out.context.summary.returnedBlocks, 25);
+verifyEqual(testCase, out.context.summary.totalDirectBlocks, 30);
+verifyEqual(testCase, out.context.summary.omittedBlocks, 5);
+verifyTrue(testCase, out.context.truncated.blocks);
+verifyEqual(testCase, out.nextActions(1).tool, 'model_read');
+verifyTrue(testCase, contains(out.nextActions(1).reason, 'truncated'));
+verifyTrue(testCase, contains(out.nextActions(1).reason, 'candidateScopes'));
+verifyTrue(testCase, contains(out.nextActions(1).reason, 'deeper explicit scope'));
 end
 
 function testCacheOnlyMissDoesNotLoadModel(testCase)
