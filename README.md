@@ -62,7 +62,7 @@ addpath("<path-to-this-fork>")
 setupCacheAwareSATK("install")
 ```
 
-By default this configures all supported local agent MCP config locations on a best-effort basis (`Agent="all"`): Pi, Claude Code, Gemini CLI, Amp, and VS Code/Copilot. It points each MCP configuration at this fork's `tools/tools.json`, initializes SATK, and verifies that `model_context` is available. Existing MCP config files are backed up before being modified.
+By default this configures all supported local agent MCP config locations on a best-effort basis (`Agent="all"`): Pi, Claude Code, Gemini CLI, Amp, and VS Code/Copilot. It points each MCP configuration at this fork's `tools/tools.json`, initializes SATK, and verifies that `model_context` plus the repo/Test Manager workflow tools are available. Existing MCP config files are backed up before being modified.
 
 To configure only one agent, pass for example:
 
@@ -203,6 +203,9 @@ After you install the Simulink Agentic Toolkit, your agent can use the following
 | `model_test` | Verify requirements. Run human-readable Gherkin tests with automatic harness generation *(requires Simulink Test)* |
 | `model_query_params` | Inspect any parameter. Query block settings, signal properties, solver config, and logging flags |
 | `model_resolve_params` | Get actual values. Resolve workspace variables like `Kp` to their numeric values across all scopes |
+| `repo_setup`, `repo_inventory` | Prepare and inventory OA/Simulink repositories with models, libraries, dictionaries, harnesses, and test files |
+| `harness_*` | List, create, open, save, and close Simulink Test harnesses so harness editing fits the model-edit workflow |
+| `test_manager_*` | Inspect, author, configure, run, and summarize native Simulink Test Manager `.mldatx` tests |
 
 
 ---

@@ -495,6 +495,502 @@
       },
       "matlab_release": ">=R2023a",
       "matlab_function": "model_cache_invalidate"
+    },
+    "repo_setup": {
+      "matlab_release": ">=R2023a",
+      "matlab_function": "repo_setup",
+      "title": "Repo Setup",
+      "description": "Prepare MATLAB/SATK and run a repository startup script for OA/Simulink workflows. Returns setup status, tool availability, and repo inventory.",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "repo": {
+            "type": "string",
+            "description": "Repository root path, or auto for current folder"
+          },
+          "startup": {
+            "type": "string",
+            "description": "Startup script path relative to repo or absolute, e.g. matlab/startup.m"
+          },
+          "toolkit_root": {
+            "type": "string",
+            "description": "Optional SATK repo root to add to MATLAB path"
+          }
+        },
+        "required": [
+          "repo",
+          "startup",
+          "toolkit_root"
+        ]
+      }
+    },
+    "repo_inventory": {
+      "matlab_release": ">=R2023a",
+      "matlab_function": "repo_inventory",
+      "title": "Repo Inventory",
+      "description": "Cache-aware discovery of Simulink models, libraries, dictionaries, harnesses, Simulink Test Manager files, feature files, and MATLAB scripts in a repo.",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "repo": {
+            "type": "string",
+            "description": "Repository root path"
+          },
+          "cachePolicy": {
+            "type": "string",
+            "enum": [
+              "cache-only",
+              "use-if-fresh",
+              "refresh-if-stale",
+              "force-refresh",
+              "do-not-cache"
+            ],
+            "description": "Cache policy. Default use-if-fresh."
+          }
+        },
+        "required": [
+          "repo",
+          "cachePolicy"
+        ]
+      }
+    },
+    "harness_list": {
+      "matlab_release": ">=R2023a",
+      "matlab_function": "harness_list",
+      "title": "Harness List",
+      "description": "Cache-aware list of Simulink Test harnesses for a model or component using sltest.harness.find.",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "Model filename/path, e.g. FCTB_SpeedControl.slx"
+          },
+          "component": {
+            "type": "string",
+            "description": "Harness owner component path or auto"
+          },
+          "searchDepth": {
+            "type": "string",
+            "description": "Search depth: all or nonnegative integer"
+          },
+          "cachePolicy": {
+            "type": "string",
+            "enum": [
+              "cache-only",
+              "use-if-fresh",
+              "refresh-if-stale",
+              "force-refresh",
+              "do-not-cache"
+            ],
+            "description": "Cache policy. Default use-if-fresh."
+          }
+        },
+        "required": [
+          "model",
+          "component",
+          "searchDepth",
+          "cachePolicy"
+        ]
+      }
+    },
+    "harness_create": {
+      "matlab_release": ">=R2023a",
+      "matlab_function": "harness_create",
+      "title": "Harness Create",
+      "description": "Create a Simulink Test harness using sltest.harness.create. After creation, use harness_open and model_read/model_edit to edit harness contents.",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "Model filename/path to load"
+          },
+          "component": {
+            "type": "string",
+            "description": "Harness owner component path"
+          },
+          "harness_name": {
+            "type": "string",
+            "description": "New harness name"
+          },
+          "save_externally": {
+            "type": "string",
+            "description": "true/false, save harness as external SLX"
+          },
+          "harness_path": {
+            "type": "string",
+            "description": "External harness file/folder path"
+          },
+          "source": {
+            "type": "string",
+            "description": "Harness source type, e.g. Inport, Signal Editor, From Workspace"
+          },
+          "sink": {
+            "type": "string",
+            "description": "Harness sink type, e.g. Outport, Scope, To Workspace"
+          },
+          "create_without_compile": {
+            "type": "string",
+            "description": "true/false"
+          }
+        },
+        "required": [
+          "model",
+          "component",
+          "harness_name",
+          "save_externally",
+          "harness_path",
+          "source",
+          "sink",
+          "create_without_compile"
+        ]
+      }
+    },
+    "harness_open": {
+      "matlab_release": ">=R2023a",
+      "matlab_function": "harness_open",
+      "title": "Harness Open",
+      "description": "Open an existing Simulink Test harness for editing. Then use model_read/model_edit on the opened harness model.",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "Owner model filename/path"
+          },
+          "component": {
+            "type": "string",
+            "description": "Harness owner component path"
+          },
+          "harness_name": {
+            "type": "string",
+            "description": "Harness name"
+          }
+        },
+        "required": [
+          "model",
+          "component",
+          "harness_name"
+        ]
+      }
+    },
+    "harness_save": {
+      "matlab_release": ">=R2023a",
+      "matlab_function": "harness_save",
+      "title": "Harness Save",
+      "description": "Save an open Simulink Test harness.",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "Owner model filename/path"
+          },
+          "component": {
+            "type": "string",
+            "description": "Harness owner component path"
+          },
+          "harness_name": {
+            "type": "string",
+            "description": "Harness name"
+          }
+        },
+        "required": [
+          "model",
+          "component",
+          "harness_name"
+        ]
+      }
+    },
+    "harness_close": {
+      "matlab_release": ">=R2023a",
+      "matlab_function": "harness_close",
+      "title": "Harness Close",
+      "description": "Close an open Simulink Test harness, optionally saving first.",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "Owner model filename/path"
+          },
+          "component": {
+            "type": "string",
+            "description": "Harness owner component path"
+          },
+          "harness_name": {
+            "type": "string",
+            "description": "Harness name"
+          },
+          "save_before_close": {
+            "type": "string",
+            "description": "true/false, default true"
+          }
+        },
+        "required": [
+          "model",
+          "component",
+          "harness_name",
+          "save_before_close"
+        ]
+      }
+    },
+    "test_manager_list": {
+      "matlab_release": ">=R2023a",
+      "matlab_function": "test_manager_list",
+      "title": "Test Manager List",
+      "description": "Cache-aware inspection of a Simulink Test Manager .mldatx file. Lists suites, test cases, harness mappings, stop times, modes, assessments, baselines, and iteration counts.",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "test_file": {
+            "type": "string",
+            "description": "Path to .mldatx test file"
+          },
+          "cachePolicy": {
+            "type": "string",
+            "enum": [
+              "cache-only",
+              "use-if-fresh",
+              "refresh-if-stale",
+              "force-refresh",
+              "do-not-cache"
+            ],
+            "description": "Cache policy. Default use-if-fresh."
+          }
+        },
+        "required": [
+          "test_file",
+          "cachePolicy"
+        ]
+      }
+    },
+    "test_manager_create_case": {
+      "matlab_release": ">=R2023a",
+      "matlab_function": "test_manager_create_case",
+      "title": "Test Manager Create Case",
+      "description": "Create a native Simulink Test Manager test case in an existing .mldatx file, optionally assigning model/component/harness and stop time.",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "test_file": {
+            "type": "string",
+            "description": "Path to .mldatx test file"
+          },
+          "suite": {
+            "type": "string",
+            "description": "Suite name to create/use"
+          },
+          "test_case": {
+            "type": "string",
+            "description": "New test case name"
+          },
+          "test_type": {
+            "type": "string",
+            "description": "simulation, baseline, or equivalence"
+          },
+          "model": {
+            "type": "string",
+            "description": "System-under-test model name/path"
+          },
+          "component": {
+            "type": "string",
+            "description": "Harness owner/component path"
+          },
+          "harness": {
+            "type": "string",
+            "description": "Harness name"
+          },
+          "stop_time": {
+            "type": "string",
+            "description": "Stop time seconds"
+          }
+        },
+        "required": [
+          "test_file",
+          "suite",
+          "test_case",
+          "test_type",
+          "model",
+          "component",
+          "harness",
+          "stop_time"
+        ]
+      }
+    },
+    "test_manager_configure_case": {
+      "matlab_release": ">=R2023a",
+      "matlab_function": "test_manager_configure_case",
+      "title": "Test Manager Configure Case",
+      "description": "Configure a native Simulink Test Manager test case. The config JSON object supports enabled, model, harness, harness_owner, stop_time, start_time, simulation_mode, callbacks, and arbitrary setProperty values.",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "test_file": {
+            "type": "string",
+            "description": "Path to .mldatx test file"
+          },
+          "suite": {
+            "type": "string",
+            "description": "Suite name"
+          },
+          "test_case": {
+            "type": "string",
+            "description": "Test case name or full TestPath"
+          },
+          "config": {
+            "type": "string",
+            "description": "JSON object with supported configuration fields"
+          }
+        },
+        "required": [
+          "test_file",
+          "suite",
+          "test_case",
+          "config"
+        ]
+      }
+    },
+    "test_manager_run": {
+      "matlab_release": ">=R2023a",
+      "matlab_function": "test_manager_run",
+      "title": "Test Manager Run",
+      "description": "Run selected or full native Simulink Test Manager tests. Default runner uses MATLAB unittest testsuite(.mldatx) for repo/CI compatibility and can emit JUnit/PDF artifacts.",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "test_file": {
+            "type": "string",
+            "description": "Path to .mldatx test file"
+          },
+          "tests": {
+            "type": "string",
+            "description": "JSON array of selected full/partial test names; [] runs all"
+          },
+          "parallel": {
+            "type": "string",
+            "description": "true/false"
+          },
+          "report": {
+            "type": "string",
+            "description": "JSON object: {\"output_dir\":\"...\",\"junit\":true,\"pdf\":false}"
+          },
+          "runner": {
+            "type": "string",
+            "description": "matlab_unittest (default) or testmanager"
+          }
+        },
+        "required": [
+          "test_file",
+          "tests",
+          "parallel",
+          "report",
+          "runner"
+        ]
+      }
+    },
+    "test_manager_results": {
+      "matlab_release": ">=R2023a",
+      "matlab_function": "test_manager_results",
+      "title": "Test Manager Results",
+      "description": "Cache-aware summary of JUnit XML test results or latest Simulink Test Manager result sets.",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "result_source": {
+            "type": "string",
+            "description": "JUnit XML path, e.g. matlab/work/results/TestReport.xml, or empty for default"
+          },
+          "cachePolicy": {
+            "type": "string",
+            "enum": [
+              "cache-only",
+              "use-if-fresh",
+              "refresh-if-stale",
+              "force-refresh",
+              "do-not-cache"
+            ],
+            "description": "Cache policy. Default use-if-fresh."
+          }
+        },
+        "required": [
+          "result_source",
+          "cachePolicy"
+        ]
+      }
     }
   }
 }
