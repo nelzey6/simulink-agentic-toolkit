@@ -5,8 +5,13 @@ if nargin < 5, model = ''; end
 if nargin < 6, component = ''; end
 if nargin < 7, harness = ''; end
 if nargin < 8 || strlength(string(stop_time)) == 0, stop_time = '10'; end
-test_file = resolveFile(test_file);
-tf = sltest.testmanager.load(test_file);
+satkproject.requireSimulinkTest('model_test_manager_create_case');
+test_file = satkproject.resolveFile(test_file, '.mldatx');
+try
+    tf = sltest.testmanager.load(test_file);
+catch ME
+    error('model_test_manager_create_case:LoadFailed', 'Failed to load Simulink Test file %s: %s', test_file, ME.message);
+end
 ts = getOrCreateSuite(tf, char(string(suite)));
 tc = ts.createTestCase(char(string(test_type)), char(string(test_case)));
 configureBasic(tc, model, component, harness, stop_time);
@@ -33,6 +38,9 @@ if strlength(string(stop_time)) > 0
     tc.setProperty('StopTime', str2double(stop_time));
 end
 end
-function p = resolveFile(p), p=char(string(p)); if ~isfile(p), q=which(p); if ~isempty(q), p=q; end, end, end
-function invalidateCaches(test_file), try delete(fullfile(pwd,'.satk','model-project-cache','test_manager','*.json')); catch, end, %#ok<NASGU>
+function invalidateCaches(test_file)
+try
+    satkproject.invalidateCacheCategory(satkproject.findProjectRoot(test_file), 'test_manager');
+catch
+end
 end

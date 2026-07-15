@@ -29,6 +29,7 @@ opts = parseOptions(varargin{:});
 repoRoot = fileparts(mfilename('fullpath'));
 toolsFile = fullfile(repoRoot, 'tools', 'tools.json');
 addpath(repoRoot);
+addpath(genpath(fullfile(repoRoot, 'tools', 'common')));
 addpath(genpath(fullfile(repoRoot, 'tools', 'model_cache')));
 addpath(genpath(fullfile(repoRoot, 'tools', 'model_project')));
 addpath(genpath(fullfile(repoRoot, 'tools', 'model_harness')));

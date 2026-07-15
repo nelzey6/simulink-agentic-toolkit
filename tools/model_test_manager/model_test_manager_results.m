@@ -2,13 +2,15 @@ function out = model_test_manager_results(result_source, cachePolicy)
 %MODEL_TEST_MANAGER_RESULTS Summarize JUnit XML result artifact or Test Manager result sets.
 if nargin < 1 || strlength(string(result_source)) == 0, result_source = fullfile(pwd,'work','results','TestReport.xml'); end
 if nargin < 2 || strlength(string(cachePolicy)) == 0, cachePolicy = 'use-if-fresh'; end
+satkproject.requireSimulinkTest('model_test_manager_results');
 src = char(string(result_source));
 fingerprint = struct('source',src,'hash',satkproject.fileHash(src));
 [~, baseName, extName] = fileparts(src);
-cp = satkproject.cachePath(pwd, 'results', ['results_' regexprep([baseName extName],'[^A-Za-z0-9_.-]','_')]);
+root = satkproject.findProjectRoot(src);
+cp = satkproject.cachePath(root, 'results', ['results_' regexprep([baseName extName],'[^A-Za-z0-9_.-]','_')]);
 [hit,payload] = satkproject.cacheRead(cp, fingerprint, cachePolicy);
 if hit, out=payload; out.cache=cacheInfo('hit',cp,cachePolicy); return; end
-if strcmp(char(cachePolicy),'cache-only'), error('test_manager_results:CacheMiss','No fresh results cache.'); end
+if strcmp(char(cachePolicy),'cache-only'), error('model_test_manager_results:CacheMiss','No fresh results cache.'); end
 if isfile(src) && endsWith(lower(src), '.xml')
     out = parseJUnit(src);
 else

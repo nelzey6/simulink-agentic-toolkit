@@ -5,6 +5,7 @@ if nargin < 5, harness_path = ''; end
 if nargin < 6 || strlength(string(source)) == 0, source = 'Inport'; end
 if nargin < 7 || strlength(string(sink)) == 0, sink = 'Outport'; end
 if nargin < 8 || strlength(string(create_without_compile)) == 0, create_without_compile = 'true'; end
+satkproject.requireSimulinkTest('model_harness_create');
 model = char(string(model)); component = char(string(component)); harness_name = char(string(harness_name));
 if ~isempty(model), ensureLoaded(model); end
 args = {'Name', harness_name, 'Source', char(string(source)), 'Sink', char(string(sink)), ...
@@ -16,6 +17,22 @@ if strlength(string(harness_path)) > 0
 end
 result = sltest.harness.create(component, args{:});
 out = struct('status','created','model',model,'component',component,'harness_name',harness_name,'result',satkproject.structify(result));
-try, model_cache_invalidate(model, 'root'); catch, end
+try
+    model_cache_invalidate(model, 'root');
+catch
 end
-function ensureLoaded(model), [~,n,e]=fileparts(model); if isempty(e), model=[model '.slx']; end, if ~bdIsLoaded(n), open_system(model); end, end
+try
+    satkproject.invalidateCacheCategory(satkproject.findProjectRoot(pwd), 'harness');
+catch
+end
+end
+function ensureLoaded(model)
+[~,n,e]=fileparts(model); if isempty(e), model=[model '.slx']; end
+if ~bdIsLoaded(n)
+    try
+        open_system(model);
+    catch ME
+        error('model_harness_create:ModelLoadFailed', 'Failed to open model %s: %s', model, ME.message);
+    end
+end
+end

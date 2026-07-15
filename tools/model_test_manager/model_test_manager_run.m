@@ -6,7 +6,8 @@ if nargin < 2, tests = '[]'; end
 if nargin < 3 || strlength(string(parallel)) == 0, parallel = 'false'; end
 if nargin < 4, report = '{}'; end
 if nargin < 5 || strlength(string(runner)) == 0, runner = 'matlab_unittest'; end
-test_file = resolveFile(test_file);
+satkproject.requireSimulinkTest('model_test_manager_run');
+test_file = satkproject.resolveFile(test_file, '.mldatx');
 if strcmpi(char(string(runner)), 'testmanager')
     out = runWithTestManager(test_file, parallel);
 else
@@ -54,7 +55,7 @@ else
     results = tr.run(suite);
 end
 out = summarizeUnittest(results, test_file, artifacts, outputDir);
-try delete(fullfile(pwd,'.satk','model-project-cache','results','*.json')); catch, end
+try satkproject.invalidateCacheCategory(satkproject.findProjectRoot(test_file), 'results'); catch, end
 end
 
 function out = summarizeUnittest(results, test_file, artifacts, outputDir)
@@ -76,7 +77,11 @@ out = struct('status',status,'test_file',test_file,'total',n,'passed',sum(passed
 end
 
 function out = runWithTestManager(test_file, parallel)
-sltest.testmanager.load(test_file);
+try
+    sltest.testmanager.load(test_file);
+catch ME
+    error('model_test_manager_run:LoadFailed', 'Failed to load Simulink Test file %s: %s', test_file, ME.message);
+end
 rs = sltest.testmanager.run('Parallel', satkproject.str2logical(parallel,false));
 out = struct('status','completed','runner','testmanager','test_file',test_file,'result_set',char(string(rs)));
 try
@@ -84,4 +89,3 @@ try
 catch
 end
 end
-function p = resolveFile(p), p=char(string(p)); if ~isfile(p), q=which(p); if ~isempty(q), p=q; end, end, end

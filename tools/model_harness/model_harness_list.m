@@ -3,6 +3,7 @@ function out = model_harness_list(model, component, searchDepth, cachePolicy)
 if nargin < 2 || strlength(string(component)) == 0, component = 'auto'; end
 if nargin < 3 || strlength(string(searchDepth)) == 0, searchDepth = 'all'; end
 if nargin < 4 || strlength(string(cachePolicy)) == 0, cachePolicy = 'use-if-fresh'; end
+satkproject.requireSimulinkTest('model_harness_list');
 model = char(string(model));
 component = char(string(component));
 if strcmpi(component, 'auto') || isempty(component)
@@ -51,10 +52,12 @@ end
 function ensureLoaded(model)
 [~, name, ext] = fileparts(model);
 if isempty(ext), modelFile = [model '.slx']; else, modelFile = model; end
-try
-    if ~bdIsLoaded(name), open_system(modelFile); end
-catch
-    try open_system(modelFile); catch, end
+if ~bdIsLoaded(name)
+    try
+        open_system(modelFile);
+    catch ME
+        error('model_harness_list:ModelLoadFailed', 'Failed to open model %s: %s', modelFile, ME.message);
+    end
 end
 end
 function h = modelHash(model)
@@ -62,7 +65,9 @@ function h = modelHash(model)
 p = which([name ext]); if isempty(p) && isfile(model), p = model; end
 h = satkproject.fileHash(p);
 end
-function root = localRoot(~)
-root = pwd;
+function root = localRoot(model)
+p = which(model);
+if isempty(p) && isfile(model), p = model; end
+if isempty(p), root = pwd; else, root = satkproject.findProjectRoot(p); end
 end
 function c = cacheInfo(status,path,policy), c=struct('status',status,'path',path,'policy',char(string(policy))); end

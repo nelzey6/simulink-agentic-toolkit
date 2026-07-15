@@ -500,7 +500,7 @@
       "matlab_release": ">=R2023a",
       "matlab_function": "model_project_setup",
       "title": "Model Project Setup",
-      "description": "Prepare MATLAB/SATK and run a repository startup script for OA/Simulink workflows. Returns setup status, tool availability, and repo inventory.",
+      "description": "Prepare MATLAB/SATK and run a project startup script for OA/Simulink workflows. Returns setup status, tool availability, and repo inventory.",
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": false,
@@ -512,7 +512,7 @@
         "properties": {
           "repo": {
             "type": "string",
-            "description": "Repository root path, or auto for current folder"
+            "description": "Project or repository root path, or auto for current folder"
           },
           "startup": {
             "type": "string",
@@ -546,7 +546,7 @@
         "properties": {
           "repo": {
             "type": "string",
-            "description": "Repository root path"
+            "description": "Project or repository root path"
           },
           "cachePolicy": {
             "type": "string",
