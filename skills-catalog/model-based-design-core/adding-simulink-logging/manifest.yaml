@@ -1,0 +1,21 @@
+# Copyright 2026 The MathWorks, Inc.
+# manifest.yaml — Tooling metadata for adding-simulink-logging
+schema_version: 1
+license: MathWorks BSD-3-Clause
+scope: cross-product
+version: "1.0"
+matlab-release: ">=R2023a"
+requires-tools:
+  - model_context
+  - model_read
+  - model_query_params
+  - model_edit
+  - model_check
+  - model_cache_invalidate
+  - evaluate_matlab_code
+requires-skills:
+  - building-simulink-models
+  - tracing-simulink-signals
+requires-products:
+  - Simulink
+toolkit: simulink-agentic-toolkit

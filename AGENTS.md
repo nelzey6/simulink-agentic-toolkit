@@ -32,6 +32,10 @@ MCP tools are available when the MCP server is connected (see `tools/registry.js
 - `model_test_manager_author` — create or update a simulation case in an existing native Test Manager file; does not create `.mldatx` files or harnesses (requires Simulink Test)
 - `model_test_manager_list`, `model_test_manager_run` — inspect and run existing native Test Manager tests (requires Simulink Test)
 
+## Context Strategy
+
+For Simulink model understanding, debugging, or editing, start with broad `model_context` because it is cache-aware. Prefer structured SATK/MCP tool results over raw MATLAB command-window dumps. Avoid session-wide `find_system`/loaded-library dumps unless a task specifically requires information not exposed by SATK tools. After `model_context`, use targeted tools such as `model_read`, `model_query_params`, or `model_edit` only where needed; invalidate the model cache once after an edit batch.
+
 ## MATLAB Prerequisite
 
 The MCP server uses `--matlab-session-mode=existing`. MATLAB must be running with `satk_initialize` executed (which calls `shareMATLABSession`) before MCP tools will work. The MATLAB MCP Server Toolbox must be installed once per MATLAB version. If tools fail to connect, guide the user to run `addpath('<toolkit_root>'); satk_initialize` in MATLAB.

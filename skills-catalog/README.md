@@ -12,17 +12,22 @@ Core Model-Based Design (MBD) skills for building, testing, and specifying Simul
 
 | Skill | Description |
 |-------|---------------------------|
+| `adding-simulink-logging` | Add or configure targeted signal logging, SDI/logsout visibility, debug outputs, or project-specific logging blocks |
 | `building-simulink-models` | Best practices for structural model changes, for example, adding blocks, wiring, layout |
 | `configuring-block-policy` | Create and manage `.satk/block-policy.json` to control which blocks the agent can use and which parameters it can modify |
 | `curating-library-kg` | Curate the library knowledge index — mark common blocks, define categories, and improve descriptions for better agent block selection |
+| `debugging-simulink-test-failures` | Diagnose failing Simulink harnesses, Test Manager cases, assertions, and model_test scenarios |
+| `documenting-simulink-models` | Create developer-oriented Markdown documentation for Simulink models, including architecture, interfaces, subsystem roles, tests, and debugging guidance |
 | `filing-bug-reports` | Generate standalone bug reports for reproducing, investigating, and fixing issues |
 | `generate-requirement-drafts` | Generate requirements. This needs Requirements Toolbox (.slreqx) with traceability links when available, falls back to structured YAML |
 | `managing-simulink-projects` | Manage MATLAB projects for Simulink workflows — path management, file registration, labels, and source control configuration |
+| `model-change-impact-analysis` | Analyze proposed or completed Simulink changes to identify affected interfaces, parameters, tests, harnesses, and validation scope |
 | `setup-custom-libraries` | Register and configure custom Simulink block libraries so the agent prefers them over built-in blocks during model building |
 | `simulating-simulink-models` | Run simulations for data exploration, parameter sweeps, and custom analysis |
 | `specifying-mbd-algorithms` | Specify algorithms for Model-Based Design (MBD) including system specs, architecture specs, implementation and test plans |
 | `specifying-plant-models` | Specify plant models for closed-loop simulation |
 | `testing-simulink-models` | Test model behavior, reproduce issues, verify changes, regression tests |
+| `tracing-simulink-signals` | Trace signals through subsystems, buses, Goto/From, adapters, references, logging, alarms, and outputs |
 
 ### [Model-Based System Engineering](model-based-system-engineering/) 
 
