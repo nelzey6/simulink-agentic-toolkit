@@ -45,9 +45,9 @@ This branch is an implementation proposal for `matlab/simulink-agentic-toolkit`.
 ### Validation
 
 - 1 project inventory integration test passes.
-- 12 licensed Test Manager integration tests pass.
-- Authoring coverage includes create, unchanged, update, validation failures, execution, external harness association, and rejection of a same-named non-simulation case.
-- `validate_model_project_tools` confirms entry points, argument order, removed-tool absence, and exact `tools.json`/`registry.json` schema parity.
+- 13 licensed Test Manager integration tests pass.
+- Authoring coverage includes the MCP JSON-string transport, create, unchanged, update, validation failures, execution, external harness association, and rejection of a same-named non-simulation case.
+- `validate_model_project_tools` confirms entry points, argument order, removed-tool absence, exact `tools.json`/`registry.json` schema parity, and MATLAB MCP extension-compatible argument types.
 
 ## 3. Model workflow skills
 
@@ -75,7 +75,7 @@ This branch is an implementation proposal for `matlab/simulink-agentic-toolkit`.
 
 Validated against the current `upstream/main` merge base:
 
-- 22 MATLAB integration tests pass: 9 snapshot, 1 inventory, and 12 Test Manager tests.
+- 23 MATLAB integration tests pass: 9 snapshot, 1 inventory, and 13 Test Manager tests.
 - Tool contract validation passes with no reported problems.
 - MATLAB Code Analyzer reports zero messages across the 25 changed/new MATLAB files in the tool groups.
 - Both tool metadata JSON files parse successfully.

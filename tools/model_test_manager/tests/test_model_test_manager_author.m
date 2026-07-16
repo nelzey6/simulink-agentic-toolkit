@@ -22,6 +22,20 @@ verifyEqual(testCase, fieldnames(out.test_case), fieldnames(listed.test_cases(1)
 clear cleanup;
 end
 
+function testAuthorsSimulationCaseFromJsonStringDefinition(testCase)
+[~, testFile, modelFile, cleanup] = createFixture(testCase); %#ok<ASGLU>
+definition = jsonencode(struct('model', modelFile, 'stop_time', '5', ...
+    'simulation_mode', 'Normal', 'enabled', true));
+
+out = model_test_manager_author(testFile, 'Agent Tests', 'JSON transport test', definition);
+
+verifyEqual(testCase, out.status, 'created');
+verifyEqual(testCase, out.test_case.name, 'JSON transport test');
+[~, modelName] = fileparts(modelFile);
+verifyEqual(testCase, out.test_case.model, modelName);
+clear cleanup;
+end
+
 function testRepeatedDefinitionIsUnchangedAndDoesNotDuplicate(testCase)
 [~, testFile, modelFile, cleanup] = createFixture(testCase); %#ok<ASGLU>
 definition = struct('model', modelFile, 'stop_time', '5', ...

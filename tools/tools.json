@@ -374,45 +374,8 @@
                                                                               "description":  "Simulation test case name to create or update"
                                                                           },
                                                              "definition":  {
-                                                                              "type":  "object",
-                                                                              "description":  "Complete supported definition for the simulation case",
-                                                                              "properties":  {
-                                                                                                 "model":  {
-                                                                                                               "type":  "string",
-                                                                                                               "description":  "Existing .slx or .mdl system-under-test file"
-                                                                                                           },
-                                                                                                 "harness":  {
-                                                                                                                 "type":  "string",
-                                                                                                                 "description":  "Existing harness name; requires harness_owner"
-                                                                                                             },
-                                                                                                 "harness_owner":  {
-                                                                                                                       "type":  "string",
-                                                                                                                       "description":  "Existing harness owner; requires harness"
-                                                                                                                   },
-                                                                                                 "enabled":  {
-                                                                                                                 "type":  "boolean",
-                                                                                                                 "default":  true
-                                                                                                             },
-                                                                                                 "stop_time":  {
-                                                                                                                   "type":  "string",
-                                                                                                                   "description":  "Optional finite nonnegative stop-time override"
-                                                                                                               },
-                                                                                                 "simulation_mode":  {
-                                                                                                                         "type":  "string",
-                                                                                                                         "enum":  [
-                                                                                                                                      "Normal",
-                                                                                                                                      "Accelerator",
-                                                                                                                                      "Rapid Accelerator",
-                                                                                                                                      "SIL",
-                                                                                                                                      "PIL"
-                                                                                                                                  ],
-                                                                                                                         "default":  "Normal"
-                                                                                                                     }
-                                                                                             },
-                                                                              "required":  [
-                                                                                               "model"
-                                                                                           ],
-                                                                              "additionalProperties":  false
+                                                                              "type":  "string",
+                                                                              "description":  "JSON object string containing the complete supported simulation-case definition: model (required), harness and harness_owner (paired), enabled, stop_time, and simulation_mode"
                                                                           }
                                                          },
                                           "required":  [

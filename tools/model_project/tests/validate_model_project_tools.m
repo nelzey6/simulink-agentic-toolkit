@@ -59,6 +59,15 @@ for i = 1:numel(retained)
         if ~isequaln(tool.inputSchema, registered.inputSchema)
             problems(end+1) = name + " schema mismatch"; %#ok<AGROW>
         end
+        propertyNames = fieldnames(tool.inputSchema.properties);
+        for j = 1:numel(propertyNames)
+            property = tool.inputSchema.properties.(propertyNames{j});
+            if ~isfield(property, 'type') || ...
+                    ~any(string(property.type) == ["string","number","integer","boolean"])
+                problems(end+1) = name + "." + propertyNames{j} + ...
+                    " uses an unsupported MATLAB MCP extension argument type"; %#ok<AGROW>
+            end
+        end
     end
     if any(signatureNames == name)
         actual = toolsJson.signatures.(char(name)).input.order;
@@ -88,15 +97,8 @@ if ~isequal(cellstr(string(author.required(:))), {'test_file';'suite';'test_case
     problems(end+1) = "model_test_manager_author required inputs differ from contract";
 end
 definition = author.properties.definition;
-if ~isfield(definition,'additionalProperties') || definition.additionalProperties
-    problems(end+1) = "model_test_manager_author definition permits arbitrary properties";
-end
-if ~isequal(cellstr(string(definition.required(:))), {'model'})
-    problems(end+1) = "model_test_manager_author definition model requirement differs from contract";
-end
-if ~isequal(string(definition.properties.simulation_mode.enum(:)), ...
-        ["Normal";"Accelerator";"Rapid Accelerator";"SIL";"PIL"])
-    problems(end+1) = "model_test_manager_author simulation modes differ from contract";
+if ~strcmp(string(definition.type), "string")
+    problems(end+1) = "model_test_manager_author definition must use the JSON-string transport";
 end
 
 results = struct('status','passed','toolkitRoot',toolkitRoot,'retained',{cellstr(retained)}, ...
