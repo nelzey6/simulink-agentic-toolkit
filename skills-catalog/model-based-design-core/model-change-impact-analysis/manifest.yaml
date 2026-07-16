@@ -11,7 +11,6 @@ requires-tools:
   - model_query_params
   - model_check
   - model_project_inventory
-  - model_test_manager_list
   - model_cache_invalidate
 requires-skills:
   - building-simulink-models

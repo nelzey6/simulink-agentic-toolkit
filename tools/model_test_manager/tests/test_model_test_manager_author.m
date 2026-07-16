@@ -55,6 +55,23 @@ verifyEqual(testCase, double(listed.test_cases(1).stop_time), 8);
 clear cleanup;
 end
 
+function testRejectsExistingNonSimulationCaseWithSameName(testCase)
+[~, testFile, modelFile, cleanup] = createFixture(testCase); %#ok<ASGLU>
+tf = sltest.testmanager.load(testFile);
+ts = tf.createTestSuite('Agent Tests');
+ts.createTestCase('baseline', 'Shared case name');
+tf.saveToFile();
+sltest.testmanager.clear;
+
+verifyError(testCase, ...
+    @() model_test_manager_author(testFile, 'Agent Tests', 'Shared case name', ...
+        struct('model', modelFile)), ...
+    'model_test_manager_author:IncompatibleTestType');
+listed = model_test_manager_list(testFile);
+verifyEqual(testCase, listed.test_case_count, 1);
+clear cleanup;
+end
+
 function testRejectsUnknownDefinitionFieldsWithoutAuthoring(testCase)
 [~, testFile, modelFile, cleanup] = createFixture(testCase); %#ok<ASGLU>
 definition = struct('model', modelFile, 'callbacks', struct('preload', 'disp(1)'));

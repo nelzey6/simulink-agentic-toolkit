@@ -12,7 +12,6 @@ requires-tools:
   - model_query_params
   - model_check
   - model_project_inventory
-  - model_test_manager_list
   - evaluate_matlab_code
 requires-skills: []
 requires-products:

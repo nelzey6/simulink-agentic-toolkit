@@ -27,6 +27,10 @@ if isempty(tc)
     tc = ts.createTestCase('simulation', test_case);
     createdCase = true;
     status = 'created';
+elseif ~strcmpi(char(string(tc.TestType)), 'simulation')
+    error('model_test_manager_author:IncompatibleTestType', ...
+        'Test case "%s" already exists in suite "%s" with type "%s"; expected a simulation case.', ...
+        test_case, suite, char(string(tc.TestType)));
 elseif definitionMatches(tc, cfg, model)
     status = 'unchanged';
 else

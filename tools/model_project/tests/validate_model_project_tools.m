@@ -102,7 +102,6 @@ end
 results = struct('status','passed','toolkitRoot',toolkitRoot,'retained',{cellstr(retained)}, ...
     'removed',{cellstr(removed)},'problems',{cellstr(problems)});
 if ~isempty(problems)
-    results.status = 'failed';
     error('validate_model_project_tools:Failed','%s',strjoin(cellstr(problems),newline));
 end
 end
